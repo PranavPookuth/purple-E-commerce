@@ -1,28 +1,70 @@
 from rest_framework import serializers
-from .models import *
-from .utils import generate_otp, send_otp_email
+from .models import User
+from django.core.mail import send_mail
+import random
+import uuid
 
-
-
-class RegistrationSerializer(serializers.ModelSerializer):
+class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'email']
 
+    def validate_email(self, value):
+        """
+        Check if the email is already registered and verified.
+        """
+        try:
+            user = User.objects.get(email=value)
+            if user.is_verified:
+                raise serializers.ValidationError("User with this email is already verified.")
+            else:
+                # Allow OTP regeneration for unverified users
+                self.context['existing_user'] = user
+        except User.DoesNotExist:
+            pass
+        return value
+
     def create(self, validated_data):
-        # Generate OTP
-        otp = generate_otp()
+        if 'existing_user' in self.context:
+            # User exists but is not verified, regenerate OTP
+            user = self.context['existing_user']
+            otp = random.randint(100000, 999999)
+            user.otp = otp
+            user.save()
 
-        # Send OTP via email
-        send_otp_email(validated_data['email'], otp)
+            # Resend OTP via email
+            send_mail(
+                'OTP Verification',
+                f'Your OTP is {otp}',
+                'praveencodeedex@gmail.com',
+                [user.email]
+            )
+            return user
+        else:
+            # New user, create account and generate OTP
+            username = validated_data['username']
+            email = validated_data['email']
 
-        # Create user with OTP
-        user = User.objects.create_user(
-            email=validated_data['email'],
-            otp=otp,
-            username=validated_data.get('username', '')
-        )
-        return user
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                is_active=False
+            )
+
+            otp = random.randint(100000, 999999)
+            user.otp = otp
+            user.save()
+
+            # Send OTP via email
+            send_mail(
+                'OTP Verification',
+                f'Your OTP is {otp}',
+                'praveencodeedex@gmail.com',
+                [email]
+            )
+
+            return user
+
 
 class OTPVerifySerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
