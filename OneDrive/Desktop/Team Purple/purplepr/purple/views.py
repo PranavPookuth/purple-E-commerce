@@ -19,15 +19,15 @@ class RegisterView(APIView):
             if user.is_verified:
                 return Response({'error': 'User with this email is already verified.'},
                                 status=status.HTTP_400_BAD_REQUEST)
-
             otp = random.randint(100000, 999999)
             user.otp = otp
             user.save()
 
+            # Send the new OTP to the user's email
             send_mail(
                 'OTP Verification',
                 f'Your new OTP is {otp}',
-                'praveencodeedex@gmail.com',
+                'praveencodeedex@gmail.com',  # Use your actual email address here
                 [user.email]
             )
 
@@ -56,12 +56,12 @@ class RegisterView(APIView):
             user.otp = otp
             user.save()
 
+            # Send the new OTP to the user's email
             send_mail(
                 'OTP Verification',
-                f'Your OTP is {otp}',
-                'praveencodeedex@gmail.com',
-                [user.email]
-            )
+                f'Your new OTP is {otp}',
+                'praveencodeedex@gmail.com',  # Use your actual email address here
+                [user.email])
 
             self.create_notification(user.name)
 
@@ -71,7 +71,6 @@ class RegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class VerifyOTPView(APIView):
     def post(self, request):
         serializer = OTPVerifySerializer(data=request.data)
@@ -79,15 +78,41 @@ class VerifyOTPView(APIView):
             email = serializer.data['email']
             otp = serializer.data['otp']
             try:
+                # Find the user by email
                 user = User.objects.get(email=email)
+
+                # Check if the OTP provided is correct
                 if user.otp == otp:
+                    # OTP is correct, mark the user as verified and active
                     user.is_active = True
                     user.is_verified = True
-                    user.otp = None
+                    user.otp = None  # Clear the OTP after verification
                     user.save()
                     return Response({'message': 'Email verified successfully! You can now log in.'},
                                     status=status.HTTP_200_OK)
-                return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
+
+                else:
+                    # OTP is invalid, generate a new OTP
+                    new_otp = random.randint(100000, 999999)
+                    user.otp = new_otp
+                    user.save()
+
+                    # Send the new OTP to the user's email
+                    send_mail(
+                        'OTP Verification',
+                        f'Your new OTP is {new_otp}',
+                        'praveencodeedex@gmail.com',  # Use your actual email address here
+                        [user.email]
+                    )
+
+                    return Response({'message': 'Invalid OTP. A new OTP has been sent to your email.'},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
             except User.DoesNotExist:
+                # If user with the given email does not exist
                 return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # If the serializer data is invalid (not provided correctly)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+

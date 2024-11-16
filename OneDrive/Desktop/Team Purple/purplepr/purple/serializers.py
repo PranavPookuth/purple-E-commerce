@@ -55,12 +55,12 @@ class RegisterSerializer(serializers.ModelSerializer):
             user.otp = otp
             user.save()
 
-            # Send OTP via email
+            # Send the new OTP to the user's email
             send_mail(
                 'OTP Verification',
-                f'Your OTP is {otp}',
-                'praveencodeedex@gmail.com',
-                [email]
+                f'Your new OTP is {otp}',
+                'praveencodeedex@gmail.com',  # Use your actual email address here
+                [user.email]
             )
 
             return user
