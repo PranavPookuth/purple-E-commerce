@@ -101,7 +101,7 @@ class VerifyOTPView(APIView):
                     send_mail(
                         'OTP Verification',
                         f'Your new OTP is {new_otp}',
-                        'praveencodeedex@gmail.com',  # Use your actual email address here
+                        'praveencodeedex@gmail.com',
                         [user.email]
                     )
 
