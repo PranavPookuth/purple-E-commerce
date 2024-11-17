@@ -73,3 +73,6 @@ class OTPVerifySerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['email','otp']
+
+
+class
