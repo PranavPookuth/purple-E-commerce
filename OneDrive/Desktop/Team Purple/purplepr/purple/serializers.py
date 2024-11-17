@@ -75,4 +75,4 @@ class OTPVerifySerializer(serializers.ModelSerializer):
         fields = ['email','otp']
 
 
-class LoginSerilaizer
+class LoginSerilaizer(serializers.ModelSerializer):
