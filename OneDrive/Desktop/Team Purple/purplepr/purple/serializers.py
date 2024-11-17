@@ -78,3 +78,6 @@ class OTPVerifySerializer(serializers.ModelSerializer):
 class LoginSerilaizer(serializers.ModelSerializer):
     email = serializers.EmailField()
     otp = serializers.CharField(max_length=6)
+
+    class Meta:
+        fields = ['email','otp']
