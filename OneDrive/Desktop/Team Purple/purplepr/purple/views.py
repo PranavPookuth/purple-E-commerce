@@ -189,7 +189,7 @@ class CategoryCreateView(generics.ListCreateAPIView):
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
-    serializer_class = CategorySerializr
+    serializer_class = CategorySerializer
 
     
 
