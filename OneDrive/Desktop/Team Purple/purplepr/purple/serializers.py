@@ -3,6 +3,7 @@ from .models import User
 from django.core.mail import send_mail
 import random
 import uuid
+from django.utils import timezone
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -86,6 +87,7 @@ class RequestOTPSerializer(serializers.Serializer):
             raise serializers.ValidationError("No user is registered with this email.")
         return value
 
+
 class VerifyOTPLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     otp = serializers.CharField(max_length=6)
@@ -97,14 +99,15 @@ class VerifyOTPLoginSerializer(serializers.Serializer):
         try:
             user = User.objects.get(email=email)
 
-            # Check if OTP matches
-            if user.otp != otp:
-                # Generate and save a new OTP
+            # Check if the OTP is expired
+            if user.is_otp_expired():
+                # Generate a new OTP
                 new_otp = random.randint(100000, 999999)
                 user.otp = new_otp
+                user.otp_generated_at = timezone.now()  # Reset the timestamp
                 user.save()
 
-                # Send new OTP via email
+                # Send the new OTP via email
                 send_mail(
                     'New OTP for Login',
                     f'Your new OTP is {new_otp}',
@@ -114,7 +117,11 @@ class VerifyOTPLoginSerializer(serializers.Serializer):
 
                 raise serializers.ValidationError("Invalid OTP. A new OTP has been sent to your email.")
 
-            # Check if the account is active
+            # Check if OTP matches
+            if user.otp != otp:
+                raise serializers.ValidationError("Invalid OTP.")
+
+            # If OTP matches, log the user in
             if not user.is_active:
                 raise serializers.ValidationError("This account is not active. Please contact support.")
 
@@ -122,6 +129,7 @@ class VerifyOTPLoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("No user is registered with this email.")
 
         return data
+
 
 
 
