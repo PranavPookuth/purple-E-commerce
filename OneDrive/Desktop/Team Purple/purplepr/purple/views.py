@@ -10,6 +10,7 @@ from .models import *
 from .utils import generate_otp, send_otp_email
 from .serializers import *
 import random
+from rest_framework import generics
 
 
 class RegisterView(APIView):
@@ -179,6 +180,18 @@ class LoginView(APIView):
             return Response({'message': 'Login successful!'}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CategoryCreateView(generics.ListCreateAPIView):
+    permission_classes = []
+    authentication_classes = []
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+    
 
 
 

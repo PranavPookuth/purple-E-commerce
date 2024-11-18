@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User
+from .models import *
 from django.core.mail import send_mail
 import random
 import uuid
@@ -131,6 +131,10 @@ class VerifyOTPLoginSerializer(serializers.Serializer):
         return data
 
 
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
 
 
 

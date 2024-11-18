@@ -38,3 +38,10 @@ class User(AbstractBaseUser):
         if not self.otp_generated_at:
             return True  # No OTP generated yet
         return timezone.now() > self.otp_generated_at + timezone.timedelta(minutes=5)
+
+
+class Category(models.Model):
+    category_name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.category_name
