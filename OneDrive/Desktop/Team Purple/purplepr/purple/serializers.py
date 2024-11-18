@@ -60,7 +60,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             send_mail(
                 'OTP Verification',
                 f'Your new OTP is {otp}',
-                'praveencodeedex@gmail.com',  # Use your actual email address here
+                'praveencodeedex@gmail.com',
                 [user.email]
             )
 
@@ -104,7 +104,7 @@ class VerifyOTPLoginSerializer(serializers.Serializer):
                 # Generate a new OTP
                 new_otp = random.randint(100000, 999999)
                 user.otp = new_otp
-                user.otp_generated_at = timezone.now()  # Reset the timestamp
+                user.otp_generated_at = timezone.now()
                 user.save()
 
                 # Send the new OTP via email
