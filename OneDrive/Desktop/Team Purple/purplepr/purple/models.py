@@ -42,11 +42,5 @@ class User(AbstractBaseUser):
 
 class Category(models.Model):
     category_name = models.CharField(max_length=100)
-    category_image = models.ImageField(upload_to='images/')
-
     def __str__(self):
         return self.category_name
-
-class Products(models.Model):
-    category = models.ForeignKey(Category,on_delete=models.CASCADE)
-    name = models.CharField

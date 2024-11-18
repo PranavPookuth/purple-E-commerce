@@ -195,3 +195,4 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 
+
