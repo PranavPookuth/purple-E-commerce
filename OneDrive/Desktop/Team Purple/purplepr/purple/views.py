@@ -1,4 +1,8 @@
+from http.client import HTTPResponse
+
+from django.contrib.auth import login
 from django.core.mail import send_mail
+from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,6 +13,8 @@ import random
 
 
 class RegisterView(APIView):
+    permission_classes = []
+    authentication_classes = []
     def post(self, request):
         email = request.data.get('email')
         username = request.data.get('username')
@@ -72,6 +78,8 @@ class RegisterView(APIView):
 
 
 class VerifyOTPView(APIView):
+    permission_classes = []
+    authentication_classes = []
     def post(self, request):
         serializer = OTPVerifySerializer(data=request.data)
         if serializer.is_valid():
@@ -114,5 +122,60 @@ class VerifyOTPView(APIView):
 
         # If the serializer data is invalid (not provided correctly)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RequestOTPView(APIView):
+    permission_classes = []
+    authentication_classes = []
+    def post(self, request):  # Ensure `request` is defined as a parameter here
+        serializer = RequestOTPSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            user = User.objects.get(email=email)
+
+            # Generate OTP
+            otp = random.randint(100000, 999999)
+            user.otp = otp
+            user.save()
+
+            # Send OTP via email
+            send_mail(
+                'Login OTP',
+                f'Your OTP for login is {otp}',
+                'praveencodeedex@gmail.com',
+                [user.email]
+            )
+
+            return Response({'message': 'OTP sent to your email.'}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LoginView(APIView):
+    permission_classes = []
+    authentication_classes = []
+    def post(self, request):
+        serializer = VerifyOTPLoginSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            user = User.objects.get(email=email)
+
+            # Clear OTP after successful verification
+            user.otp = None
+            user.save()
+
+            # Specify the backend explicitly
+            user.backend = 'django.contrib.auth.backends.ModelBackend'  # Use your actual backend if different
+
+            # Log the user in
+            login(request, user)
+
+            return Response({'message': 'Login successful!'}, status=status.HTTP_200_OK)
+
+        # Return the error message from the serializer
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 
 

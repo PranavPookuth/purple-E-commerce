@@ -74,10 +74,56 @@ class OTPVerifySerializer(serializers.ModelSerializer):
         model = User
         fields = ['email','otp']
 
+class RequestOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField()
 
-class LoginSerilaizer(serializers.ModelSerializer):
+    def validate_email(self, value):
+        try:
+            user = User.objects.get(email=value)
+            if not user.is_active:
+                raise serializers.ValidationError("This account is not active. Please contact support.")
+        except User.DoesNotExist:
+            raise serializers.ValidationError("No user is registered with this email.")
+        return value
+
+class VerifyOTPLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     otp = serializers.CharField(max_length=6)
 
-    class Meta:
-        fields = ['email','otp']
+    def validate(self, data):
+        email = data.get('email')
+        otp = data.get('otp')
+
+        try:
+            user = User.objects.get(email=email)
+
+            # Check if OTP matches
+            if user.otp != otp:
+                # Generate and save a new OTP
+                new_otp = random.randint(100000, 999999)
+                user.otp = new_otp
+                user.save()
+
+                # Send new OTP via email
+                send_mail(
+                    'New OTP for Login',
+                    f'Your new OTP is {new_otp}',
+                    'your-email@example.com',
+                    [user.email],
+                )
+
+                raise serializers.ValidationError("Invalid OTP. A new OTP has been sent to your email.")
+
+            # Check if the account is active
+            if not user.is_active:
+                raise serializers.ValidationError("This account is not active. Please contact support.")
+
+        except User.DoesNotExist:
+            raise serializers.ValidationError("No user is registered with this email.")
+
+        return data
+
+
+
+
+

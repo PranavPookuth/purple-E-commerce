@@ -131,8 +131,8 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTHENTICATION_BACKENDS = (
-    'coinapp.backends.EmailBackend',
-    'django.contrib.auth.backends.ModelBackend',
+    'django.contrib.auth.backends.ModelBackend',  # Default backend
+    'purple.backends.CustomBackend',
 )
 
 AUTH_USER_MODEL = 'purple.User'
