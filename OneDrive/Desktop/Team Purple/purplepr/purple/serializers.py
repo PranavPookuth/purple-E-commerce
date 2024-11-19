@@ -145,11 +145,10 @@ class BannerImageSerializer(serializers.ModelSerializer):
         model = BannerImage
         fields = '__all__'
 
-class CausorelSerializer(serializers.ModelSerializer):
+class CarouselItemSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CaruoselItem
-        fields = ['title','carusoel_image']
-
+        model = CarouselItem
+        fields = ['id', 'title', 'image',]
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:

@@ -54,12 +54,14 @@ class BannerImage(models.Model):
     def __str__(self):
         return self.banner_title
 
-class CaruoselItem(models.Model):
-    title = models.CharField(max_length=100,null=True,blank=True)
-    carusoel_image = models.ImageField(upload_to='carousel_images/')
+
+class CarouselItem(models.Model):
+    title = models.CharField(max_length=100)
+    image = models.ImageField(upload_to='carousel_images/')
 
     def __str__(self):
         return self.title
+
 
 class Products(models.Model):
     product_name = models.CharField(max_length=100)

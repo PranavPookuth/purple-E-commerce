@@ -182,8 +182,10 @@ class LoginView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class UserListCreateView(generics.ListCreateAPIView):
-        queryset = User.objects.all()
-        serializer_class = UserSerializer
+    permission_classes = []
+    authentication_classes = []
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
@@ -210,39 +212,34 @@ class BannerDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BannerImageSerializer
 
 
-class CarouselListCreateView(generics.ListCreateAPIView):
-    queryset = CaruoselItem.objects.all()
-    serializer_class = CausorelSerializer
+class CarouselItemListCreateView(generics.ListCreateAPIView):
+    permission_classes = []
+    authentication_classes = []
+    queryset = CarouselItem.objects.all()
+    serializer_class = CarouselItemSerializer
     pagination_class = None
 
     def create(self, request, *args, **kwargs):
-        # Check that 'image' exists in the request data and is a list of files
         images = request.FILES.getlist('image')
-        if not images:
-            return Response({"detail": "No images provided."}, status=status.HTTP_400_BAD_REQUEST)
-
         data_list = []
+
         for image in images:
             data = {
                 'title': request.data.get('title'),
                 'image': image
             }
-            # Use the serializer to validate the data
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
-            # Perform creation (save the object)
             self.perform_create(serializer)
-            # Append the serialized data for response
             data_list.append(serializer.data)
 
-        # Return a successful response with the created items
         return Response(data_list, status=status.HTTP_201_CREATED)
 
-
-
 class CarouselDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = CaruoselItem.objects.all()
-    serializer_class = CausorelSerializer
+    permission_classes = []
+    authentication_classes = []
+    queryset = CarouselItem.objects.all()
+    serializer_class = CarouselItemSerializer
 
 
 class ProductListCreateView(generics.ListCreateAPIView):
