@@ -14,6 +14,6 @@ urlpatterns=[
     path('products/<int:pk>',ProductDetailView.as_view(),name='product-details'),
     path('bannerimage/',BannerListCreateview.as_view(),name='banner-image'),
     path('bannerimage/<int:pk>/',BannerDetailView.as_view(),name='banner-details'),
-    path('carousel/', CarouselItemListCreateView.as_view(), name='carousel-list-create'),
+    path('carousel/', CarouselListCreateView.as_view(), name='carousel-list-create'),
     path('carousel/<int:pk>/', CarouselDetailView.as_view(), name='carousel-detail'),
 ]

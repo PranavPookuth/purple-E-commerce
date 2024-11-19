@@ -2,6 +2,7 @@ from http.client import HTTPResponse
 
 from django.contrib.auth import login
 from django.core.mail import send_mail
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -212,28 +213,43 @@ class BannerDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BannerImageSerializer
 
 
-class CarouselItemListCreateView(generics.ListCreateAPIView):
+class CarouselListCreateView(generics.ListCreateAPIView):
     permission_classes = []
     authentication_classes = []
     queryset = CarouselItem.objects.all()
     serializer_class = CarouselItemSerializer
     pagination_class = None
+    parser_classes = [MultiPartParser, FormParser]  # Ensure file upload parsing
 
     def create(self, request, *args, **kwargs):
         images = request.FILES.getlist('image')
-        data_list = []
+        title = request.data.get('title')
+        if not title:
+            return Response(
+                {"error": "title  & image is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        if not images:
+            return Response(
+                {"error": "At least one image is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        data_list = []
         for image in images:
+            # Pass the image and title to the serializer
             data = {
-                'title': request.data.get('title'),
+                'title': title,
                 'image': image
             }
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
+            serializer.save()  # Save the instance
             data_list.append(serializer.data)
 
         return Response(data_list, status=status.HTTP_201_CREATED)
+
 
 class CarouselDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = []
