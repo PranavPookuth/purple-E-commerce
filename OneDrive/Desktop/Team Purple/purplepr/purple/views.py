@@ -180,6 +180,14 @@ class LoginView(APIView):
             return Response({'message': 'Login successful!'}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class UserListCreateView(generics.ListCreateAPIView):
+        queryset = User.objects.all()
+        serializer_class = UserSerializer
+
+class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
 class CategoryCreateView(generics.ListCreateAPIView):
     permission_classes = []
@@ -187,9 +195,55 @@ class CategoryCreateView(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
+
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+
+class BannerListCreateview(generics.ListCreateAPIView):
+    queryset = BannerImage.objects.all()
+    serializer_class = BannerImageSerializer
+
+class BannerDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = BannerImage.objects.all()
+    serializer_class = BannerImageSerializer
+
+
+class CarouselListCreateView(generics.ListCreateAPIView):
+    queryset = CaruoselItem.objects.all()
+    serializer_class = CausorelSerializer
+    pagination_class = None
+
+    def create(self, request, *args, **kwargs):
+        images = request.FILES.getlist('image')
+        data_list = []
+
+        for image in images:
+            data = {
+                'title': request.data.get('title'),
+                'image': image
+            }
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            data_list.append(serializer.data)
+
+        return Response(data_list, status=status.HTTP_201_CREATED)
+
+
+class CarouselDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = CaruoselItem.objects.all()
+    serializer_class = CausorelSerializer
+
+
+class ProductListCreateView(generics.ListCreateAPIView):
+    queryset = Products.objects.all()
+    serializer_class = ProductSerializer
+
+class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Products.objects.all()
+    serializer_class = ProductSerializer
 
     
 

@@ -130,12 +130,31 @@ class VerifyOTPLoginSerializer(serializers.Serializer):
 
         return data
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = '__all__'
 
+class BannerImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BannerImage
+        fields = '__all__'
+
+class CausorelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CaruoselItem
+        fields = '__all__'
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Products
+        fields = '__all__'
 
 
 
