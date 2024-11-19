@@ -56,7 +56,7 @@ class BannerImage(models.Model):
 
 class CaruoselItem(models.Model):
     title = models.CharField(max_length=100,null=True,blank=True)
-    carusoel_image = models.ImageField(upload_to='caurose_image/',null=True,blank=True)
+    carusoel_image = models.ImageField(upload_to='carousel_images/')
 
     def __str__(self):
         return self.title

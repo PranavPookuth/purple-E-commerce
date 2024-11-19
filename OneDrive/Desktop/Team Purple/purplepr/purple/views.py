@@ -216,20 +216,28 @@ class CarouselListCreateView(generics.ListCreateAPIView):
     pagination_class = None
 
     def create(self, request, *args, **kwargs):
+        # Check that 'image' exists in the request data and is a list of files
         images = request.FILES.getlist('image')
-        data_list = []
+        if not images:
+            return Response({"detail": "No images provided."}, status=status.HTTP_400_BAD_REQUEST)
 
+        data_list = []
         for image in images:
             data = {
                 'title': request.data.get('title'),
                 'image': image
             }
+            # Use the serializer to validate the data
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
+            # Perform creation (save the object)
             self.perform_create(serializer)
+            # Append the serialized data for response
             data_list.append(serializer.data)
 
+        # Return a successful response with the created items
         return Response(data_list, status=status.HTTP_201_CREATED)
+
 
 
 class CarouselDetailView(generics.RetrieveUpdateDestroyAPIView):
