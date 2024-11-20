@@ -271,7 +271,7 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
                 'data': serializer.data
             }, status=status.HTTP_200_OK)
         except Products.DoesNotExist:
-            return Response({'error': 'Product not found!'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error':  'Product not found!'}, status=status.HTTP_404_NOT_FOUND)
 
     def update(self, request, *args, **kwargs):
         """
