@@ -164,9 +164,23 @@ class CarouselItemSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'image',]
 
 class ProductSerializer(serializers.ModelSerializer):
+    product_image = serializers.ImageField(required=True)
     class Meta:
         model = Products
-        fields = '__all__'
+        fields = [
+            'id',
+            'product_name',
+            'product_description',
+            'product_price',
+            'product_image',
+            'category',
+            'isofferproduct',
+            'Popular_products',  # Correct field name
+            'created_at',
+            'newarrival',
+            'trending_one'
+        ]
+
 
 
 

@@ -1,5 +1,4 @@
 from http.client import HTTPResponse
-
 from django.contrib.auth import login
 from django.core.mail import send_mail
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -12,7 +11,11 @@ from .utils import generate_otp, send_otp_email
 from .serializers import *
 import random
 from rest_framework import generics
-
+from rest_framework.pagination import PageNumberPagination
+class CustomProductPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class RegisterView(APIView):
     permission_classes = []
@@ -223,16 +226,12 @@ class CarouselDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CarouselItem.objects.all()
     serializer_class = CarouselItemSerializer
 
-
 class ProductListCreateView(generics.ListCreateAPIView):
     permission_classes = []
     authentication_classes = []
     queryset = Products.objects.all()
     serializer_class = ProductSerializer
-
-class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Products.objects.all()
-    serializer_class = ProductSerializer
+    pagination_class = CustomProductPagination
 
     
 
