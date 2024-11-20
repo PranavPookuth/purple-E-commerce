@@ -76,12 +76,18 @@ class Products(models.Model):
     newarrival = models.BooleanField(default=False)
     trending_one = models.BooleanField(default=False)
 
-    def calculate_offer_price(self):
+    def save(self, *args, **kwargs):
+        """
+        Override the save method to automatically calculate the offer price based on the discount and price.
+        """
         if self.discount and self.price:
             discount_amount = (self.discount / 100) * self.price
-            self.offer_price = self.price - discount_amount
-        else:
-            self.offer_price = self.price
+            self.offerprice = self.price - discount_amount
+        elif not self.discount:
+            # If no discount, reset offerprice to None or the original price
+            self.offerprice = self.price
+
+        super(Products, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.product_name

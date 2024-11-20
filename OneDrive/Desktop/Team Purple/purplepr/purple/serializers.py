@@ -185,20 +185,30 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Products
-        fields = ['id','product_name','product_description','price','category','isofferproduct','offerprice','Popular_products','discount','created_at','newarrival','trending_one'
-                  'images','uploaded-images'
-        ]
+        fields = ['id', 'product_name', 'product_description', 'price', 'category', 'isofferproduct', 'offerprice',
+                  'Popular_products', 'discount', 'created_at', 'newarrival', 'trending_one', 'images', 'uploaded_images']
 
-        def get_category_name(self, obj):
-            return obj.category.name if obj.category else None
+    def create(self, validated_data):
+        uploaded_images = validated_data.pop('uploaded_images', [])
+        product = Products.objects.create(**validated_data)
 
-        def create(self, validated_data):
-            uploaded_images = validated_data.pop('uploaded_images', [])
-            product = Products.objects.create(**validated_data)
+        # Now create ProductImage objects for the uploaded images
+        for image in uploaded_images:
+            ProductImage.objects.create(product=product, image=image)
 
+        return product
+
+    def update(self, instance, validated_data):
+        uploaded_images = validated_data.pop('uploaded_images', [])
+        instance = super().update(instance, validated_data)
+
+        if uploaded_images:
+            # Clear existing images if needed or add new ones
+            ProductImage.objects.filter(product=instance).delete()
             for image in uploaded_images:
-                ProductImage.objects.create(product=product, image=image)
+                ProductImage.objects.create(product=instance, image=image)
 
-            return product
+        return instance
+
 
 

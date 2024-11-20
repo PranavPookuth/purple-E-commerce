@@ -259,6 +259,55 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Products.objects.all()
     serializer_class = ProductSerializer
 
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Handle GET request to retrieve a product
+        """
+        try:
+            product = self.get_object()
+            serializer = self.get_serializer(product)
+            return Response({
+                'message': 'Product retrieved successfully!',
+                'data': serializer.data
+            }, status=status.HTTP_200_OK)
+        except Products.DoesNotExist:
+            return Response({'error': 'Product not found!'}, status=status.HTTP_404_NOT_FOUND)
+
+    def update(self, request, *args, **kwargs):
+        """
+        Handle PUT or PATCH request to update a product
+        """
+        partial = kwargs.pop('partial', False)
+        try:
+            product = self.get_object()
+            serializer = self.get_serializer(product, data=request.data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            return Response({
+                'message': 'Product updated successfully!',
+                'data': serializer.data
+            }, status=status.HTTP_200_OK)
+        except Products.DoesNotExist:
+            return Response({'error': 'Product not found!'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Handle DELETE request to delete a product
+        """
+        try:
+            product = self.get_object()
+            self.perform_destroy(product)
+            return Response({
+                'message': 'Product deleted successfully!'
+            }, status=status.HTTP_200_OK)
+        except Products.DoesNotExist:
+            return Response({'error': 'Product not found!'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class ProductImageListView(generics.ListCreateAPIView):
     permission_classes = []
     authentication_classes = []
