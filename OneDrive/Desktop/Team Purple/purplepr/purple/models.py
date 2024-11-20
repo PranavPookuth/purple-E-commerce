@@ -59,19 +59,36 @@ class CarouselItem(models.Model):
     def __str__(self):
         return self.title
 
+class BannerImage(models.Model):
+    title = models.CharField(max_length=255,null=True,blank=True)
+    banner_image = models.ImageField(upload_to='Banner_images/',null=True,blank=True)
 
 class Products(models.Model):
     product_name = models.CharField(max_length=100)
     product_description = models.TextField()
-    product_price = models.DecimalField(max_digits=10, decimal_places=2)
-    product_image = models.ImageField(upload_to='products_image/', null=True, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.ForeignKey(Category, related_name='products', on_delete=models.CASCADE)
+    offerprice = models.DecimalField(max_digits=10,decimal_places=2,null=True,blank=True)
     isofferproduct = models.BooleanField(default=False)
+    discount = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Discount Percentage")
     Popular_products = models.BooleanField(default=False)  # Correct name
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     newarrival = models.BooleanField(default=False)
     trending_one = models.BooleanField(default=False)
 
+    def calculate_offer_price(self):
+        if self.discount and self.price:
+            discount_amount = (self.discount / 100) * self.price
+            self.offer_price = self.price - discount_amount
+        else:
+            self.offer_price = self.price
+
     def __str__(self):
         return self.product_name
 
+class ProductImage(models.Model):
+    product = models.ForeignKey(Products,related_name='images',on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='product_image')
+
+    def __str__(self):
+        return f"Image for {self.product.product_name}"

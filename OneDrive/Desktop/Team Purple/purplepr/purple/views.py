@@ -1,25 +1,22 @@
 from http.client import HTTPResponse
 from django.contrib.auth import login
 from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import *
 from .utils import generate_otp, send_otp_email
 from .serializers import *
 import random
 from rest_framework import generics
-from rest_framework.pagination import PageNumberPagination
-class CustomProductPagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = 'page_size'
-    max_page_size = 100
+from . models import *
 
 class RegisterView(APIView):
     permission_classes = []
     authentication_classes = []
+
 
     def post(self, request):
         email = request.data.get('email')
@@ -77,6 +74,7 @@ class VerifyOTPView(APIView):
     permission_classes = []
     authentication_classes = []
 
+
     def post(self, request):
         serializer = OTPVerifySerializer(data=request.data)
         if serializer.is_valid():
@@ -124,6 +122,8 @@ class VerifyOTPView(APIView):
 class RequestOTPView(APIView):
     permission_classes = []
     authentication_classes = []
+
+
     def post(self, request, *args, **kwargs):
         serializer = RequestOTPSerializer(data=request.data)
         if serializer.is_valid():
@@ -164,15 +164,21 @@ class UserListCreateView(generics.ListCreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+
+
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+
 
 class CategoryCreateView(generics.ListCreateAPIView):
     permission_classes = []
     authentication_classes = []
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+
 
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -182,12 +188,12 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CategorySerializer
 
 
+
 class CarouselListCreateView(generics.ListCreateAPIView):
     permission_classes = []
     authentication_classes = []
     queryset = CarouselItem.objects.all()
     serializer_class = CarouselItemSerializer
-    pagination_class = None
     parser_classes = [MultiPartParser, FormParser]  # Ensure file upload parsing
 
     def create(self, request, *args, **kwargs):
@@ -226,12 +232,51 @@ class CarouselDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CarouselItem.objects.all()
     serializer_class = CarouselItemSerializer
 
+class BannerImageListCreateView(generics.ListCreateAPIView):
+    permission_classes = []
+    authentication_classes = []
+    queryset = BannerImage.objects.all()
+    serializer_class = BannerImageSerializer
+
+
+class BannerDetailsView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = []
+    authentication_classes = []
+    queryset = BannerImage.objects.all()
+    serializer_class = BannerImageSerializer
+
+
 class ProductListCreateView(generics.ListCreateAPIView):
     permission_classes = []
     authentication_classes = []
     queryset = Products.objects.all()
     serializer_class = ProductSerializer
-    pagination_class = CustomProductPagination
+
+
+class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = []
+    authentication_classes = []
+    queryset = Products.objects.all()
+    serializer_class = ProductSerializer
+
+class ProductImageListView(generics.ListCreateAPIView):
+    permission_classes = []
+    authentication_classes = []
+    queryset = ProductImage.objects.all()
+    serializer_class = ProductImageSerializer
+
+    def post(self, request, product_id, *args, **kwargs):
+        """
+        Create multiple product images for a given product.
+        """
+        product = get_object_or_404(Products, id=product_id)
+
+        # Loop over the uploaded images and save them
+        images = request.FILES.getlist('image')  # 'image' is the key in form-data
+        for image in images:
+            ProductImage.objects.create(product=product, image=image)
+
+        return Response({"message": "Images uploaded successfully"}, status=status.HTTP_201_CREATED)
 
     
 

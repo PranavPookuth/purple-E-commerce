@@ -159,29 +159,46 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class CarouselItemSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(write_only=True)
+    image = serializers.ImageField()
     class Meta:
         model = CarouselItem
         fields = ['id', 'title', 'image',]
 
+class BannerImageSerializer(serializers.ModelSerializer):
+    title = serializers.CharField()
+    banner_image = serializers.ImageField()
+    class Meta:
+        model = BannerImage
+        fields ='__all__'
+
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields =['id','image']
+
 class ProductSerializer(serializers.ModelSerializer):
-    product_image = serializers.ImageField(required=True)
+    images = ProductImageSerializer(many=True, read_only=True)
+    uploaded_images = serializers.ListField(
+        child=serializers.ImageField(), write_only=True, required=False
+    )
+
     class Meta:
         model = Products
-        fields = [
-            'id',
-            'product_name',
-            'product_description',
-            'product_price',
-            'product_image',
-            'category',
-            'isofferproduct',
-            'Popular_products',  # Correct field name
-            'created_at',
-            'newarrival',
-            'trending_one'
+        fields = ['id','product_name','product_description','price','category','isofferproduct','offerprice','Popular_products','discount','created_at','newarrival','trending_one'
+                  'images','uploaded-images'
         ]
 
+        def get_category_name(self, obj):
+            return obj.category.name if obj.category else None
 
+        def create(self, validated_data):
+            uploaded_images = validated_data.pop('uploaded_images', [])
+            product = Products.objects.create(**validated_data)
 
+            for image in uploaded_images:
+                ProductImage.objects.create(product=product, image=image)
+
+            return product
 
 
