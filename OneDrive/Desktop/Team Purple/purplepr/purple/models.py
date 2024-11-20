@@ -1,3 +1,5 @@
+from random import randint
+
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from django.utils import timezone
@@ -12,10 +14,14 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, email, otp, **extra_fields):
+    def create_superuser(self, username, email, otp=None, **extra_fields):
+        # Automatically generate a random OTP if not provided
+        if otp is None:
+            otp = str(randint(100000, 999999))  # Random 6-digit OTP
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         return self.create_user(username, email, otp, **extra_fields)
+
 
 
 class User(AbstractBaseUser):
@@ -46,15 +52,6 @@ class Category(models.Model):
     def __str__(self):
         return self.category_name
 
-
-class BannerImage(models.Model):
-    banner_title = models.CharField(max_length=100,null=True,blank=True)
-    banner_image = models.ImageField(upload_to='banner/',null=True,blank=True)
-
-    def __str__(self):
-        return self.banner_title
-
-
 class CarouselItem(models.Model):
     title = models.CharField(max_length=100)
     image = models.ImageField(upload_to='carousel_images/')
@@ -62,17 +59,17 @@ class CarouselItem(models.Model):
     def __str__(self):
         return self.title
 
-
 class Products(models.Model):
     product_name = models.CharField(max_length=100)
     product_description = models.TextField()
     product_price = models.DecimalField(max_digits=10,decimal_places=2)
-    offer_price = models.DecimalField(max_digits=10,decimal_places=2,null=True,blank=True)
     product_image = models.ImageField(upload_to='products_image/',null=True,blank=True)
     category = models.ForeignKey(Category,related_name='products',on_delete=models.CASCADE)
-    isofferproduct = models.BooleanField(default=False)
-    ispopular = models.BooleanField(default=False)
+    offerproducts = models.BooleanField(default=False)
+    Popular_products = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
+    newarrival = models.BooleanField(default=False)
+    trending_one = models.BooleanField(default=False)
 
     def __str__(self):
         return self.product_name

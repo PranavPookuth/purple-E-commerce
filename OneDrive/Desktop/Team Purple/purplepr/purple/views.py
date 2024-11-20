@@ -118,42 +118,15 @@ class VerifyOTPView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class RequestOTPView(APIView):
     permission_classes = []
     authentication_classes = []
-
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         serializer = RequestOTPSerializer(data=request.data)
         if serializer.is_valid():
-            email = serializer.validated_data['email']
-            try:
-                user = User.objects.get(email=email)
-
-                # Check if the OTP has expired or not
-                if user.is_otp_expired():
-                    otp = random.randint(100000, 999999)
-                    user.otp = otp
-                    user.otp_generated_at = timezone.now()  # Update the timestamp
-                    user.save()
-
-                    # Send OTP via email
-                    send_mail(
-                        'Login OTP',
-                        f'Your OTP for login is {otp}',
-                        'your-email@example.com',
-                        [user.email]
-                    )
-
-                    return Response({'message': 'OTP sent to your email.'}, status=status.HTTP_200_OK)
-                else:
-                    return Response({'message': 'OTP is still valid. Please check your email.'},
-                                    status=status.HTTP_400_BAD_REQUEST)
-
-            except User.DoesNotExist:
-                return Response({'error': 'No user is registered with this email.'}, status=status.HTTP_404_NOT_FOUND)
-
+            return Response({"message": "OTP sent successfully!"}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
@@ -200,17 +173,10 @@ class CategoryCreateView(generics.ListCreateAPIView):
 
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = []
+    authentication_classes = []
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-
-
-class BannerListCreateview(generics.ListCreateAPIView):
-    queryset = BannerImage.objects.all()
-    serializer_class = BannerImageSerializer
-
-class BannerDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = BannerImage.objects.all()
-    serializer_class = BannerImageSerializer
 
 
 class CarouselListCreateView(generics.ListCreateAPIView):
@@ -259,6 +225,8 @@ class CarouselDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ProductListCreateView(generics.ListCreateAPIView):
+    permission_classes = []
+    authentication_classes = []
     queryset = Products.objects.all()
     serializer_class = ProductSerializer
 
