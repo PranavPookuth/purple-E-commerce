@@ -350,7 +350,7 @@ class ProductImageDetailView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(, request, pk, *args, **kwargs):
+    def delete(self, request, pk, *args, **kwargs):
         """
         Delete a product image by ID.
         """
