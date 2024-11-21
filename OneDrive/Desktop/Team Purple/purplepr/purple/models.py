@@ -69,12 +69,12 @@ class Products(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.ForeignKey(Category, related_name='products', on_delete=models.CASCADE)
     offerprice = models.DecimalField(max_digits=10,decimal_places=2,null=True,blank=True)
-    isofferproduct = models.BooleanField(default=False)
+    isofferproduct = models.BooleanField()
     discount = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Discount Percentage")
-    Popular_products = models.BooleanField(default=False)  # Correct name
+    Popular_products = models.BooleanField()  # Correct name
     created_at = models.DateTimeField(auto_now_add=True, null=True)
-    newarrival = models.BooleanField(default=False)
-    trending_one = models.BooleanField(default=False)
+    newarrival = models.BooleanField()
+    trending_one = models.BooleanField()
 
     def save(self, *args, **kwargs):
         """
@@ -84,7 +84,6 @@ class Products(models.Model):
             discount_amount = (self.discount / 100) * self.price
             self.offerprice = self.price - discount_amount
         elif not self.discount:
-            # If no discount, reset offerprice to None or the original price
             self.offerprice = self.price
 
         super(Products, self).save(*args, **kwargs)

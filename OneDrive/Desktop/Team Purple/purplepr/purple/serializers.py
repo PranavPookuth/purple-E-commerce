@@ -185,18 +185,31 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Products
-        fields = ['id', 'product_name', 'product_description', 'price', 'category', 'isofferproduct', 'offerprice',
-                  'Popular_products', 'discount', 'created_at', 'newarrival', 'trending_one', 'images', 'uploaded_images']
+        fields = [
+            'id', 'product_name', 'product_description', 'price', 'category',
+            'isofferproduct', 'offerprice', 'Popular_products', 'discount',
+            'created_at', 'newarrival', 'trending_one', 'images', 'uploaded_images'
+        ]
+
+    def validate(self, attrs):
+        # Ensure that required fields have valid values
+        if attrs.get('isofferproduct') and (attrs.get('offerprice') is None or attrs.get('discount') is None):
+            raise serializers.ValidationError({
+                'offerprice': 'Offer price is required when isofferproduct is True.',
+                'discount': 'Discount is required when isofferproduct is True.'
+            })
+        return attrs
 
     def create(self, validated_data):
         uploaded_images = validated_data.pop('uploaded_images', [])
         product = Products.objects.create(**validated_data)
 
-        # Now create ProductImage objects for the uploaded images
+        # Create ProductImage objects for uploaded images
         for image in uploaded_images:
             ProductImage.objects.create(product=product, image=image)
 
         return product
+
 
     def update(self, instance, validated_data):
         uploaded_images = validated_data.pop('uploaded_images', [])

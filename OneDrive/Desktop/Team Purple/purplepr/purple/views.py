@@ -327,7 +327,37 @@ class ProductImageListView(generics.ListCreateAPIView):
 
         return Response({"message": "Images uploaded successfully"}, status=status.HTTP_201_CREATED)
 
-    
+class ProductImageDetailView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    def get(self, request, pk, *args, **kwargs):
+        """
+        Retrieve a product image by ID.
+        """
+        product_image = get_object_or_404(ProductImage, pk=pk)
+        serializer = ProductImageSerializer(product_image)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk, *args, **kwargs):
+        """
+        Update a product image by ID.
+        """
+        product_image = get_object_or_404(ProductImage, pk=pk)
+        serializer = ProductImageSerializer(product_image, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, *args, **kwargs):
+        """
+        Delete a product image by ID.
+        """
+        product_image = get_object_or_404(ProductImage, pk=pk)
+        product_image.delete()
+        return Response({"message": "Product image deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
 
 
 
