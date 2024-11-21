@@ -220,7 +220,6 @@ class ProductSerializer(serializers.ModelSerializer):
             ProductImage.objects.filter(product=instance).delete()
             for image in uploaded_images:
                 ProductImage.objects.create(product=instance, image=image)
-
         return instance
 
 
