@@ -356,7 +356,7 @@ class ProductImageDetailView(APIView):
         """
         product_image = get_object_or_404(ProductImage, pk=pk)
         product_image.delete()
-        return Response({"message": "Product image deleted successfully."}status=status.HTTP_204_NO_CONTENT)
+        return Response({"message": "Product image deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
 
 
