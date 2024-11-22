@@ -12,6 +12,7 @@ from .serializers import *
 import random
 from rest_framework import generics
 from . models import *
+from rest_framework.filters import SearchFilter
 
 class RegisterView(APIView):
     permission_classes = []
@@ -395,6 +396,38 @@ class SingleProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = []
     queryset = Products.objects.all()
     serializer_class = SingleProductSerializer
+
+class ProductSearchView(APIView):
+    permission_classes = []
+    authentication_classes = []
+    """
+    API View to handle product search using a search_query parameter.
+    """
+    def post(self, request, *args, **kwargs):
+        # Validate the incoming data
+        input_serializer = ProductSearchSerializer(data=request.data)
+        if input_serializer.is_valid():
+            search_query = input_serializer.validated_data.get('search_query')
+
+            # Perform search on the Products model
+            results = Products.objects.filter(
+                product_name__icontains=search_query
+            ) | Products.objects.filter(
+                product_description__icontains=search_query
+            )
+
+            # Serialize the results
+            output_serializer = ProductSerializer(results, many=True)
+            return Response({
+                'message': f'{len(results)} products found.',
+                'results': output_serializer.data
+            }, status=status.HTTP_200_OK)
+
+        # Return validation errors if input is invalid
+        return Response(input_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 
 
 
