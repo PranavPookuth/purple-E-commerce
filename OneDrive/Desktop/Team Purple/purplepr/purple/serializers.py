@@ -251,6 +251,8 @@ class SingleProductSerializer(serializers.ModelSerializer):
             'isofferproduct': prod.isofferproduct,
         } for prod in related]
 
+class ProductSearchSerializer(serializers.Serializer):
+    search_query = serializers.CharField(max_length=100, required=True)
 
 
 
