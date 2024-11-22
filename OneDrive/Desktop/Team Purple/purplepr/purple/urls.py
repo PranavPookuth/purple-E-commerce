@@ -28,4 +28,6 @@ urlpatterns=[
     path('products/images/<int:pk>/', ProductImageDetailView.as_view(), name='product-image-detail'),
     path('product-images/<int:pk>/', ProductImageDetailView.as_view(), name='product-image-detail'),
 
+path('singleproducts/<int:pk>/', SingleProductDetailView.as_view(), name='product-detail'),
+
 ]
