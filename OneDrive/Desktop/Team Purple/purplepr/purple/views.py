@@ -339,15 +339,47 @@ class ProductImageDetailView(APIView):
         serializer = ProductImageSerializer(product_image)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def patch(self, request, pk, *args, **kwargs):
+        """
+        Add new images to an existing product via PATCH method.
+        """
+        product = get_object_or_404(Products, pk=pk)
+
+        # Extract multiple images from the request
+        uploaded_images = request.FILES.getlist('uploaded_images')
+
+        if uploaded_images:
+            # Add each image to the product
+            for image in uploaded_images:
+                ProductImage.objects.create(product=product, image=image)
+
+        # Serialize the updated product
+        serializer = ProductSerializer(product)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def put(self, request, pk, *args, **kwargs):
         """
-        Update a product image by ID.
+        Replace existing images or add new ones via PUT method.
         """
-        product_image = get_object_or_404(ProductImage, pk=pk)
-        serializer = ProductImageSerializer(product_image, data=request.data, partial=True)
+        product = get_object_or_404(Products, pk=pk)
+
+        # Extract multiple images from the request
+        uploaded_images = request.FILES.getlist('uploaded_images')
+
+        if uploaded_images:
+            # Clear existing images
+            ProductImage.objects.filter(product=product).delete()
+
+            # Add new images
+            for image in uploaded_images:
+                ProductImage.objects.create(product=product, image=image)
+
+        # Update other product fields if needed
+        serializer = ProductSerializer(product, data=request.data, partial=False)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, *args, **kwargs):

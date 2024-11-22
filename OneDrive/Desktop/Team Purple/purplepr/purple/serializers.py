@@ -210,17 +210,19 @@ class ProductSerializer(serializers.ModelSerializer):
 
         return product
 
-
     def update(self, instance, validated_data):
+        # Extract uploaded_images from the validated data
         uploaded_images = validated_data.pop('uploaded_images', [])
+
+        # Update other fields of the product
         instance = super().update(instance, validated_data)
 
-        if uploaded_images:
-            # Clear existing images if needed or add new ones
-            ProductImage.objects.filter(product=instance).delete()
-            for image in uploaded_images:
-                ProductImage.objects.create(product=instance, image=image)
+        # Add new images to the product
+        for image in uploaded_images:
+            ProductImage.objects.create(product=instance, image=image)
+
         return instance
+
 
 
 
