@@ -223,6 +223,35 @@ class ProductSerializer(serializers.ModelSerializer):
 
         return instance
 
+class SingleProductSerializer(serializers.ModelSerializer):
+    """
+    Serializer for a single product, including images and optional related products.
+    """
+    images = ProductImageSerializer(many=True, read_only=True)  # Images associated with the product
+    related_products = serializers.SerializerMethodField()  # Fetch related products
+
+    class Meta:
+        model = Products
+        fields = [
+            'id', 'product_name', 'product_description', 'price', 'offerprice',
+            'isofferproduct', 'discount', 'Popular_products', 'newarrival',
+            'trending_one', 'created_at', 'images', 'related_products'
+        ]
+
+    def get_related_products(self, obj):
+        """
+        Fetch products in the same category, excluding the current product.
+        """
+        related = Products.objects.filter(category=obj.category).exclude(id=obj.id)[:5]
+        return [{
+            'id': prod.id,
+            'product_name': prod.product_name,
+            'price': prod.price,
+            'offerprice': prod.offerprice,
+            'isofferproduct': prod.isofferproduct,
+        } for prod in related]
+
+
 
 
 

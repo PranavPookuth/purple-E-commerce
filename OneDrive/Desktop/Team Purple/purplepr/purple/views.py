@@ -390,6 +390,11 @@ class ProductImageDetailView(APIView):
         product_image.delete()
         return Response({"message": "Product image deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
+class SingleProductDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = []
+    authentication_classes = []
+    queryset = Products.objects.all()
+    serializer_class = SingleProductSerializer
 
 
 
