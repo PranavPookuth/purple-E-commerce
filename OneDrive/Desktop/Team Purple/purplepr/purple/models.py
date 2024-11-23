@@ -101,7 +101,7 @@ class ProductImage(models.Model):
 
 class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Products, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     selected_weight = models.CharField(max_length=50,default="100l")
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
