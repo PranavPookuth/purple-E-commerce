@@ -99,3 +99,14 @@ class ProductImage(models.Model):
         return f"Image for {self.product.product_name}"
 
 
+class Cart(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    selected_weight = models.CharField(max_length=50,default="100l")
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Cart item for {self.user} - {self.product.name} ({self.selected_weight})"
