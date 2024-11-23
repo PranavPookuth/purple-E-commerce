@@ -108,4 +108,4 @@ class Cart(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Cart item for {self.user} - {self.product.name} ({self.selected_weight})"
+        return f"Cart item for {self.user} - {self.product.name} "
