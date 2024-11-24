@@ -426,7 +426,7 @@ class ProductSearchView(APIView):
         # Return validation errors if input is invalid
         return Response(input_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-12
+1
 
 
 
