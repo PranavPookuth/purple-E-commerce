@@ -1,3 +1,4 @@
+import string
 from decimal import Decimal
 from http.client import HTTPResponse
 from django.contrib.auth import login
@@ -573,20 +574,73 @@ class RemoveFromCartView(APIView):
 
         return Response({"message": "Product removed from cart"}, status=status.HTTP_204_NO_CONTENT)
 
-#order
-
-class OrderListView(generics.ListAPIView):
-    serializer_class = OrderSerializer
+class CheckoutCODView(APIView):
     permission_classes = []
-    authentication_classes = []# Ensure only authenticated users can access their orders
+    authentication_classes = []  # Define appropriate permission classes as needed
 
-    def get_queryset(self):
-        """
-        This method returns the queryset of orders for a specific user,
-        ordered by the creation date (latest first).
-        """
-        user_id = self.kwargs['user_id']  # Get the user_id from the URL
-        return Order.objects.filter(user_id=user_id).order_by('-created_at')
+    def generate_order_id(self):
+        """Generate a unique order ID."""
+        prefix = "ORD"
+        random_number = ''.join(random.choices(string.digits, k=6))
+        return f"{prefix}{random_number}"
+
+    def generate_delivery_pin(self):
+        """Generate a 4-digit random delivery pin."""
+        return ''.join(random.choices(string.digits, k=4))
+
+    def post(self, request, user_id):
+        user = get_object_or_404(User, id=user_id)
+        cart_items = Cart.objects.filter(user=user)
+
+        if not cart_items.exists():
+            return Response({"error": "Cart is empty"}, status=status.HTTP_404_NOT_FOUND)
+
+        total_price = 0
+        total_cart_items = cart_items.count()
+        product_ids = []
+        product_names = []
+        quantities = []
+
+        # Iterate over the cart items to calculate the total price and collect product data
+        for cart_item in cart_items:
+            product = cart_item.product  # Assuming each cart item has a reference to a product
+
+            # No stock check needed, just proceed with the quantity in the cart item
+            total_price += product.price * cart_item.quantity  # Assuming product has a 'price' attribute
+            product_ids.append(str(product.id))
+            product_names.append(product.product_name)  # Use 'product_name' instead of 'name'
+            quantities.append(str(cart_item.quantity))
+
+        # Generate unique order ID and delivery pin
+        unique_order_id = self.generate_order_id()
+        delivery_pin = self.generate_delivery_pin()
+
+        # Create the order with the 'COD' payment method
+        order = Order.objects.create(
+            user=user,
+            payment_method='COD',
+            product_ids=",".join(product_ids),
+            product_names=",".join(product_names),
+            total_price=total_price,
+            total_cart_items=total_cart_items,
+            quantities=",".join(quantities),
+            order_ids=unique_order_id,
+            delivery_pin=delivery_pin
+        )
+
+        # Clear the user's cart after the order is placed
+        cart_items.delete()
+
+        return Response({
+            "message": "Checkout successful",
+            "total_price": total_price,
+            "total_cart_items": total_cart_items,
+            "order_id": order.order_ids,
+            "delivery_pin": delivery_pin
+        }, status=status.HTTP_201_CREATED)
+
+
+
 
 
 

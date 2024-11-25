@@ -36,6 +36,8 @@ urlpatterns=[
     path('user_cart_items/<int:user_id>/', UserCartView.as_view(), name='user_cart_items'),
     path('remove_from_cart/<int:user_id>/<int:product_id>/', RemoveFromCartView.as_view(), name='remove_from_cart'),
 
+    path('checkout/cod/<int:user_id>/', CheckoutCODView.as_view(), name='checkout_cod'),
+
 
 
 ]

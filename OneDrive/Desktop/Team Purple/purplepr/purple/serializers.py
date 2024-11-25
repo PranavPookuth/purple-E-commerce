@@ -287,8 +287,8 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'payment_method', 'product_ids', 'product_names',
             'total_price', 'status', 'created_at', 'updated_at',
-            'order_ids', 'total_cart_items', 'selected_weights',
-            'quantities', 'delivery_pin'
+            'order_ids', 'total_cart_items', 'quantities',  # Keeping quantities
+            'delivery_pin'
         ]
         read_only_fields = ['created_at', 'updated_at']
 
@@ -299,6 +299,8 @@ class OrderSerializer(serializers.ModelSerializer):
         if value not in ['COD', 'Online']:
             raise serializers.ValidationError("Invalid payment method.")
         return value
+
+
 
 
 

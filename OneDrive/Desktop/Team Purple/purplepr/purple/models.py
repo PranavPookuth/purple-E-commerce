@@ -131,8 +131,7 @@ class Order(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     order_ids = models.CharField(max_length=100, null=True, blank=True)
     total_cart_items = models.PositiveIntegerField(default=0)
-    selected_weights = models.TextField(null=True, blank=True)
-    quantities = models.TextField(null=True, blank=True)
+    quantities = models.TextField(null=True, blank=True)  # Retaining quantities
     delivery_pin = models.CharField(max_length=6, null=True, blank=True)
 
     def __str__(self):
@@ -140,3 +139,5 @@ class Order(models.Model):
 
     def get_order_time(self):
         return self.created_at.strftime("Ordered on %Y-%m-%d at %I:%M%p")
+
+
