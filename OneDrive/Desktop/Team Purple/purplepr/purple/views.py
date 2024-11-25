@@ -638,12 +638,3 @@ class CheckoutCODView(APIView):
             "order_id": order.order_ids,
             "delivery_pin": delivery_pin
         }, status=status.HTTP_201_CREATED)
-
-
-
-
-
-
-
-
-
