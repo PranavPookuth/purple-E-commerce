@@ -306,5 +306,3 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 
-
-
