@@ -301,8 +301,3 @@ class OrderSerializer(serializers.ModelSerializer):
         return value
 
 
-
-
-
-wd
-
