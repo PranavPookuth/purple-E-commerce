@@ -255,5 +255,54 @@ class ProductSearchSerializer(serializers.Serializer):
     search_query = serializers.CharField(max_length=100, required=True)
 
 
+class CartSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)  # For user representation
+    product = ProductSerializer(read_only=True)  # Product details in the cart
+    quantity = serializers.IntegerField()  # Quantity of the product in the cart
+    price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)  # Final price for the cart item
+
+    class Meta:
+        model = Cart
+        fields = ['id', 'user', 'product', 'quantity', 'price', 'created_at', 'updated_at']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        # Ensure price is a Decimal
+        price = instance.product.offerprice if instance.product.isofferproduct and instance.product.offerprice else instance.product.price
+        if price is None:
+            price = 0  # Fallback value
+
+        # Ensure quantity is an integer (in case it's a string or None)
+        quantity = int(instance.quantity) if instance.quantity else 0  # Default to 0 if None or invalid
+
+        # Calculate total price
+        representation['price'] = price * quantity
+
+        return representation
+
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = [
+            'id', 'user', 'payment_method', 'product_ids', 'product_names',
+            'total_price', 'status', 'created_at', 'updated_at',
+            'order_ids', 'total_cart_items', 'selected_weights',
+            'quantities', 'delivery_pin'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+    def validate_payment_method(self, value):
+        """
+        Ensure that the payment method is either 'COD' or 'Online'
+        """
+        if value not in ['COD', 'Online']:
+            raise serializers.ValidationError("Invalid payment method.")
+        return value
+
+
+
+
+
 
 

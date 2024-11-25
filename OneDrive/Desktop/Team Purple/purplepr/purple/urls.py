@@ -31,4 +31,11 @@ urlpatterns=[
     path('singleproducts/<int:pk>/', SingleProductDetailView.as_view(), name='product-detail'),
     path('products/search/', ProductSearchView.as_view(), name='product-search'),
 
+    path('add_to_cart/<int:user_id>/<int:product_id>/', AddToCartView.as_view(), name='add_to_cart'),
+    path('update_cart_item/<int:user_id>/<int:product_id>/', UpdateCartItemQuantityView.as_view(), name='update_cart_item'),
+    path('user_cart_items/<int:user_id>/', UserCartView.as_view(), name='user_cart_items'),
+    path('remove_from_cart/<int:user_id>/<int:product_id>/', RemoveFromCartView.as_view(), name='remove_from_cart'),
+
+
+
 ]

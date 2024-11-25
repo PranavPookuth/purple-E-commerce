@@ -1,3 +1,4 @@
+from decimal import Decimal
 from http.client import HTTPResponse
 from django.contrib.auth import login
 from django.core.mail import send_mail
@@ -13,7 +14,8 @@ import random
 from rest_framework import generics
 from . models import *
 from rest_framework.filters import SearchFilter
-
+from django.db.models import Sum, F
+from decimal import Decimal
 class RegisterView(APIView):
     permission_classes = []
     authentication_classes = []
@@ -426,6 +428,165 @@ class ProductSearchView(APIView):
         # Return validation errors if input is invalid
         return Response(input_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class AddToCartView(APIView):
+    permission_classes = []
+    authentication_classes = []
+    def post(self, request, user_id, product_id):
+        # Get the user and product or return a 404 if not found
+        user = get_object_or_404(User, pk=user_id)
+        product = get_object_or_404(Products, pk=product_id)
+
+        # Get the quantity from the request data (defaults to 1 if not provided)
+        quantity = request.data.get('quantity', 1)
+
+        # Determine the price based on whether the product has an offer
+        if product.isofferproduct and product.offerprice:
+            price = product.offerprice
+        else:
+            price = product.price
+
+        # Try to get or create the cart item
+        cart_item, created = Cart.objects.get_or_create(user=user, product=product)
+
+        if created:
+            cart_item.quantity = quantity
+            cart_item.price = price  # Set the price for the cart item
+            cart_item.save()
+
+            # Serialize the cart item and return a response
+            serializer = CartSerializer(cart_item, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        # If the item is already in the cart, return a message
+        else:
+            return Response({"detail": "Item already in cart, no changes made"}, status=status.HTTP_200_OK)
+
+
+class UpdateCartItemQuantityView(APIView):
+    permission_classes = []
+    authentication_classes = []
+    def put(self, request, user_id, product_id):
+        return self.update_cart_item(request, user_id, product_id, partial=False)
+
+    def patch(self, request, user_id, product_id):
+        return self.update_cart_item(request, user_id, product_id, partial=True)
+
+    def update_cart_item(self, request, user_id, product_id, partial):
+        user = get_object_or_404(User, pk=user_id)
+        product = get_object_or_404(Products, pk=product_id)
+
+        # Get the new quantity from the request data
+        quantity = request.data.get('quantity')
+
+        # Validate the quantity
+        if not partial or 'quantity' in request.data:
+            if quantity is None or not str(quantity).isdigit() or int(quantity) < 1:
+                return Response({"detail": "Invalid quantity"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get the cart item for this user and product
+        cart_item = get_object_or_404(Cart, user=user, product=product)
+
+        # Determine the price to apply (offer price or regular price)
+        if product.isofferproduct and product.offerprice:
+            price = product.offerprice  # Use the offer price if available
+        else:
+            price = product.price  # Otherwise, use the regular price
+
+        # Update the cart item's quantity and price
+        if quantity:
+            cart_item.quantity = int(quantity)
+
+        cart_item.price = price
+        cart_item.total_price = cart_item.quantity * cart_item.price  # Update the total price based on quantity
+
+        # Save the updated cart item
+        cart_item.save()
+
+        # Recalculate the total cart price for the user
+        total_cart_price = Cart.objects.filter(user=user).aggregate(total=Sum(F('quantity') * F('price')))['total']
+
+        # Serialize the updated cart item and return a response
+        serializer = CartSerializer(cart_item, context={'request': request})
+
+        # Return the updated cart item and total price
+        response_data = {
+            'cart_item': serializer.data,
+            'total_cart_price': total_cart_price
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
+class UserCartView(APIView):
+    permission_classes = []
+    authentication_classes = []
+    def get(self, request, user_id):
+        # Fetch cart items for the user
+        cart_items = Cart.objects.filter(user_id=user_id).select_related('product')
+
+        # Initialize total cart price
+        total_cart_price = Decimal('0.00')
+
+        # Iterate over the cart items and calculate the total price
+        for cart_item in cart_items:
+            product = cart_item.product
+
+            # Determine the price to use (offer price if available, else regular price)
+            if product.isofferproduct and product.offerprice:
+                price = product.offerprice
+            else:
+                price = product.price
+
+            # Calculate the total price for this cart item based on the quantity
+            cart_item.total_price = cart_item.quantity * price
+
+            # Add this cart item's total price to the total cart price
+            total_cart_price += cart_item.total_price
+
+        # Serialize the cart items to include in the response
+        serializer = CartSerializer(cart_items, context={'request': request}, many=True)
+
+        # Prepare the response data
+        response_data = {
+            'message': 'Products Retrieved Successfully',
+            'cart_items': serializer.data,
+            'total_cart_price': str(total_cart_price)  # Convert to string for precision
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
+class RemoveFromCartView(APIView):
+    permission_classes = []
+    authentication_classes = []
+    def delete(self, request, user_id, product_id):
+        # Get the user and product
+        user = get_object_or_404(User, pk=user_id)
+        product = get_object_or_404(Products, pk=product_id)
+
+        # Try to get the cart item
+        cart_item = get_object_or_404(Cart, user=user, product=product)
+
+        # Delete the cart item
+        cart_item.delete()
+
+        return Response({"message": "Product removed from cart"}, status=status.HTTP_204_NO_CONTENT)
+
+#order
+
+class OrderListView(generics.ListAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = []
+    authentication_classes = []# Ensure only authenticated users can access their orders
+
+    def get_queryset(self):
+        """
+        This method returns the queryset of orders for a specific user,
+        ordered by the creation date (latest first).
+        """
+        user_id = self.kwargs['user_id']  # Get the user_id from the URL
+        return Order.objects.filter(user_id=user_id).order_by('-created_at')
 
 
 
