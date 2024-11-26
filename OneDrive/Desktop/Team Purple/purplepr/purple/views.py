@@ -652,5 +652,5 @@ class OrderDetailView(APIView):
 
         user = get_object_or_404(User, id=user_id)
         order = get_object_or_404(Order, user=user, order_ids=order_ids)
-        serializer = OrderDetailSerializer(order)
+        serializer = OrderSerializer(order)
         return Response(serializer.data, status=status.HTTP_200_OK)
