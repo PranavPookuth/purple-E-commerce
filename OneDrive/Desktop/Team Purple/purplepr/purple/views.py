@@ -638,3 +638,11 @@ class CheckoutCODView(APIView):
             "order_id": order.order_ids,
             "delivery_pin": delivery_pin
         }, status=status.HTTP_201_CREATED)
+
+
+class OrderListView(generics.ListAPIView):
+    serializer_class = OrderSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        return Order.objects.filter(user_id=user_id).order_by('-created_at')
