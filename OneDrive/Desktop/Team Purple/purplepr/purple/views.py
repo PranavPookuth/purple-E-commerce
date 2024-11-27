@@ -595,6 +595,15 @@ class CheckoutCODView(APIView):
         if not cart_items.exists():
             return Response({"error": "Cart is empty"}, status=status.HTTP_404_NOT_FOUND)
 
+        # Collect address data from the request body
+        address = request.data.get('address')
+        city = request.data.get('city')
+        state = request.data.get('state')
+        pin_code = request.data.get('pin_code')
+
+        if not all([address, city, state, pin_code]):
+            return Response({"error": "address, city, state, and pin_code are required"}, status=status.HTTP_400_BAD_REQUEST)
+
         total_price = 0
         total_cart_items = cart_items.count()
         product_ids = []
@@ -625,7 +634,11 @@ class CheckoutCODView(APIView):
             total_cart_items=total_cart_items,
             quantities=",".join(quantities),
             order_ids=unique_order_id,
-            delivery_pin=delivery_pin
+            delivery_pin=delivery_pin,
+            address=address,
+            city=city,
+            state=state,
+            pin_code=pin_code
         )
 
         # Clear the user's cart after the order is placed
@@ -640,6 +653,7 @@ class CheckoutCODView(APIView):
         }, status=status.HTTP_201_CREATED)
 
 
+
 class OrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer
 
@@ -647,10 +661,3 @@ class OrderListView(generics.ListAPIView):
         user_id = self.kwargs['user_id']
         return Order.objects.filter(user_id=user_id).order_by('-created_at')
 
-class OrderDetailView(APIView):
-    def get(self, request, user_id, order_ids):
-
-        user = get_object_or_404(User, id=user_id)
-        order = get_object_or_404(Order, user=user, order_ids=order_ids)
-        serializer = OrderSerializer(order)
-        return Response(serializer.data, status=status.HTTP_200_OK)

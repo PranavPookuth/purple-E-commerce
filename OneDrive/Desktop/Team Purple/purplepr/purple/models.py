@@ -134,6 +134,11 @@ class Order(models.Model):
     quantities = models.TextField(null=True, blank=True)  # Retaining quantities
     delivery_pin = models.CharField(max_length=6, null=True, blank=True)
 
+    address = models.TextField(null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    state = models.CharField(max_length=100, null=True, blank=True)
+    pin_code = models.CharField(max_length=20, null=True, blank=True)
+
     def __str__(self):
         return f"Order {self.unique_order_serial} by {self.user.email} - Payment: {self.payment_method}"
 

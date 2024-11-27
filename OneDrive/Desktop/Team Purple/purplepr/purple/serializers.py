@@ -303,19 +303,22 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    user_name = serializers.CharField(source='user.name')
+    user_name = serializers.SerializerMethodField()
     order_time = serializers.SerializerMethodField()
     cart_products = CartSerializer(source='cart.products', many=True, read_only=True)
 
     class Meta:
         model = Order
         fields = ['id', 'user', 'user_name', 'status', 'created_at', 'product_names', 'payment_method', 'product_ids',
-                  'total_price', 'order_ids', 'cart_products', 'total_cart_items', 'order_time']
+                  'total_price', 'order_ids', 'cart_products', 'total_cart_items', 'order_time', 'address', 'city', 'state', 'pin_code']
+
+    def get_user_name(self, obj):
+        return obj.user.username
 
     def get_order_time(self, obj):
-        # Convert to IST (Indian Standard Time)
         ist_timezone = pytz.timezone('Asia/Kolkata')
         created_at_ist = obj.created_at.astimezone(ist_timezone)
-
-        # Format the datetime in the desired format
         return created_at_ist.strftime("%d/%m/%Y at %I:%M%p")
+
+
+
