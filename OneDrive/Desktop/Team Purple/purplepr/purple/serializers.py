@@ -321,4 +321,42 @@ class OrderSerializer(serializers.ModelSerializer):
         return created_at_ist.strftime("%d/%m/%Y at %I:%M%p")
 
 
+class OrderDetailSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.name', read_only=True)
+    address = serializers.CharField( read_only=True)
+    total_price = serializers.ReadOnlyField()
+    cart_products = serializers.SerializerMethodField()  # Custom method to get product details
+    order_time = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = [
+            'id', 'user', 'user_name', 'status', 'created_at', 'product_names', 'payment_method', 'product_ids',
+            'total_price', 'order_ids', 'cart_products', 'total_cart_items', 'order_time', 'address', 'city',
+            'state', 'pin_code'
+        ]
+
+    def get_order_time(self, obj):
+        return obj.created_at.strftime("%d/%m/%Y at %I:%M%p")
+
+    def get_cart_products(self, obj):
+        product_ids = obj.product_ids.split(",") if obj.product_ids else []
+        product_names = obj.product_names.split(",") if obj.product_names else []
+        quantities = obj.quantities.split(",") if obj.quantities else []
+
+        products = Products.objects.filter(id__in=product_ids)
+
+        cart_products = []
+        for product in products:
+            index = product_ids.index(str(product.id))
+            quantity = int(quantities[index]) if len(quantities) > index else 1
+
+            cart_products.append({
+                "name": product_names[index],
+                "quantity": quantity,
+                "price": str(product.price)  # Assuming the price is on the product model itself
+            })
+
+        return cart_products
+
 
