@@ -653,6 +653,8 @@ class CheckoutCODView(APIView):
         }, status=status.HTTP_201_CREATED)
 
 class OrderListView(generics.ListAPIView):
+    permission_classes = []
+    authentication_classes = []
     serializer_class = OrderSerializer
 
     def get_queryset(self):
@@ -666,3 +668,54 @@ class OrderDetailView(APIView):
         serializer = OrderDetailSerializer(order)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+class AllOrdersListView(generics.ListAPIView):
+    queryset = Order.objects.all().order_by('-created_at')
+    serializer_class = AllOrdersSerializer
+    permission_classes = []
+    authentication_classes = []
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+
+        response_data = {
+            'total_count': queryset.count(),
+            'results': serializer.data
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
+class Allorderdetailview(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Order.objects.all()
+    serializer_class = AllOrdersSerializer
+    permission_classes = []
+    authentication_classes = []
+
+    lookup_field = 'pk'
+
+    def get_object(self):
+        order_id = self.kwargs.get(self.lookup_field)
+        return generics.get_object_or_404(Order, id=order_id)
+
+    # Handle retrieving an order
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    # Handle updating an order
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+    # Handle deleting an order
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)

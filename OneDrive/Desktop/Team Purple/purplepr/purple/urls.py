@@ -40,6 +40,8 @@ urlpatterns=[
 
     path('orders/<int:user_id>/', OrderListView.as_view(), name='order-list'),
     path('orders/<int:user_id>/<str:order_ids>/', OrderDetailView.as_view(), name='order-detail'),
+    path('orders/', AllOrdersListView.as_view(), name='all-orders-list'),
+    path('order/<int:pk>/', Allorderdetailview.as_view(), name='order-detail'),
 
 
 
