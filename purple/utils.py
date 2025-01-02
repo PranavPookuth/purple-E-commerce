@@ -10,4 +10,6 @@ def send_otp_email(to_email, otp):
     from_email = 'praveen.codeedex@gmail.com'  # Replace with your email
     recipient_list = [to_email]
 
+
+
     send_mail(subject, message, from_email, recipient_list)
