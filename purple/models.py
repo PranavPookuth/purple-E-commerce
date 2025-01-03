@@ -48,6 +48,7 @@ class User(AbstractBaseUser):
 class Category(models.Model):
     category_name = models.CharField(max_length=100)
     category_image = models.ImageField(upload_to='Images/',null=True,blank=True)
+
     def __str__(self):
         return self.category_name
 
@@ -70,7 +71,7 @@ class Products(models.Model):
     offerprice = models.DecimalField(max_digits=10,decimal_places=2,null=True,blank=True)
     isofferproduct = models.BooleanField()
     discount = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Discount Percentage")
-    Popular_products = models.BooleanField()  # Correct name
+    Popular_products = models.BooleanField()
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     newarrival = models.BooleanField()
     trending_one = models.BooleanField()

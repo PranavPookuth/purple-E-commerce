@@ -138,8 +138,6 @@ class RequestOTPView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
 class LoginView(APIView):
     permission_classes = []
     authentication_classes = []
@@ -150,19 +148,21 @@ class LoginView(APIView):
             email = serializer.validated_data['email']
             user = User.objects.get(email=email)
 
-            # Clear OTP after successful verification
+            # Reset OTP after successful login
             user.otp = None
-            user.otp_generated_at = None  # Clear the OTP timestamp
             user.save()
 
-            # Specify the backend explicitly
-            user.backend = 'django.contrib.auth.backends.ModelBackend'  # Use your actual backend if different
+            # Log in the user
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
-            # Log the user in
-            login(request, user)
-
-            return Response({'message': 'Login successful!'}, status=status.HTTP_200_OK)
-
+            # Include the username in the response
+            return Response(
+                {
+                    "user": user.username,
+                    "message": "Login successful!"
+                },
+                status=status.HTTP_200_OK
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class UserListCreateView(generics.ListCreateAPIView):
@@ -172,13 +172,11 @@ class UserListCreateView(generics.ListCreateAPIView):
     serializer_class = UserSerializer
 
 
-
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = []
     authentication_classes = []
     queryset = User.objects.all()
     serializer_class = UserSerializer
-
 
 
 class CategoryCreateView(generics.ListCreateAPIView):
@@ -188,14 +186,11 @@ class CategoryCreateView(generics.ListCreateAPIView):
     serializer_class = CategorySerializer
 
 
-
-
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = []
     authentication_classes = []
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-
 
 
 class CarouselListCreateView(generics.ListCreateAPIView):
@@ -618,7 +613,6 @@ class CheckoutCODView(APIView):
         # Iterate over the cart items to calculate the total price and collect product data
         for cart_item in cart_items:
             product = cart_item.product  # Assuming each cart item has a reference to a product
-
             # No stock check needed, just proceed with the quantity in the cart item
             total_price += product.price * cart_item.quantity  # Assuming product has a 'price' attribute
             product_ids.append(str(product.id))
