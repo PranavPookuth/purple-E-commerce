@@ -126,7 +126,6 @@ class VerifyOTPView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class RequestOTPView(APIView):
     permission_classes = []
     authentication_classes = []
