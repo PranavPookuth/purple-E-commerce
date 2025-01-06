@@ -10,6 +10,9 @@ urlpatterns=[
     path('user/',UserListCreateView.as_view(),name='user-list'),
     path('user/<int:pk>/',UserDetailView.as_view(),name='user-details'),
 
+    path('userprofile/',UserprofileListCreateView.as_view(),name='user-profile'),
+    path('userprofile/<str:user__username>/',UserProfileDetailView.as_view(),name='user-detail'),
+
     path('category/',CategoryCreateView.as_view(),name='category'),
     path('category/<int:pk>/',CategoryDetailView.as_view(),name='category-details'),
 

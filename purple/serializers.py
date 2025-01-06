@@ -152,6 +152,27 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'otp', 'otp_generated_at', 'is_verified', 'last_login']
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(write_only=True)  # Accept `username` as input
+    email = serializers.CharField(source='user.email', read_only=True)
+    class Meta:
+        model = UserProfile
+        fields = [
+            'id', 'username', 'email', 'contact_number', 'whatsapp_number',
+            'address', 'profile_image', 'created_at'
+        ]
+    def validate_username(self, value):
+        """Ensure the username exists."""
+        try:
+            user = User.objects.get(username=value)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("User with this username does not exist.")
+        return user
+
+    def create(self, validated_data):
+        user = validated_data.pop('username')  # Extract the user instance
+        return UserProfile.objects.create(user=user, **validated_data)
+
 class CategorySerializer(serializers.ModelSerializer):
     category_image = serializers.ImageField(max_length=None, use_url=True)
     class Meta:

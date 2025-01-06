@@ -17,6 +17,8 @@ from . models import *
 from rest_framework.filters import SearchFilter
 from django.db.models import Sum, F
 from decimal import Decimal
+
+
 class RegisterView(APIView):
     permission_classes = []
     authentication_classes = []
@@ -175,6 +177,48 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = []
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+class UserprofileListCreateView(generics.ListCreateAPIView):
+    """
+    View to list and create UserProfiles.
+    Allows creating a UserProfile by username.
+    """
+    permission_classes = []  # Adjust permissions as needed
+    authentication_classes = []  # Adjust authentication as needed
+    queryset = UserProfile.objects.all()
+    serializer_class = UserProfileSerializer
+
+    def perform_create(self, serializer):
+        """
+        Custom save logic to associate the UserProfile with a user by username.
+        """
+        serializer.save()
+
+    def get_queryset(self):
+        """
+        Optionally filter by username using the query parameter `username`.
+        """
+        username = self.request.query_params.get('username', None)
+        if username:
+            return UserProfile.objects.filter(user__username=username)
+        return super().get_queryset()
+
+
+class UserProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    View to retrieve, update, or delete a UserProfile by username.
+    """
+    permission_classes = []  # Adjust permissions as needed
+    authentication_classes = []  # Adjust authentication as needed
+    queryset = UserProfile.objects.all()
+    serializer_class = UserProfileSerializer
+    lookup_field = "user__username"  # Use the related User's username as the lookup field
+
+    def get_queryset(self):
+        """
+        Override the queryset to ensure proper filtering.
+        """
+        return super().get_queryset()
 
 
 class CategoryCreateView(generics.ListCreateAPIView):
