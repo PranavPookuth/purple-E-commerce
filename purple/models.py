@@ -43,6 +43,19 @@ class User(AbstractBaseUser):
             return True  # No OTP generated yet
         return timezone.now() > self.otp_generated_at + timezone.timedelta(minutes=5)
 
+class UserProfile(models.Model):
+    user = models.OneToOneField(User,on_delete=models.CASCADE,related_name='userprofile')
+    contact_number = models.BigIntegerField(null=False,blank=False)
+    profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
+    whatsapp_number =models.BigIntegerField(null=False,blank=False)
+    address = models.TextField(null=False,blank=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"Profile of {self.user.username}"
+
+    def get_email(self):
+        """Return the email of the associated user."""
+        return self.user.email
 
 
 class Category(models.Model):
