@@ -192,7 +192,6 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = '__all__'
 
-
 class CarouselItemSerializer(serializers.ModelSerializer):
     title = serializers.CharField(write_only=True)
     image = serializers.ImageField()
