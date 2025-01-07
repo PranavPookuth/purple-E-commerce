@@ -220,7 +220,6 @@ class UserProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
         """
         return super().get_queryset()
 
-
 class CategoryCreateView(generics.ListCreateAPIView):
     permission_classes = []
     authentication_classes = []

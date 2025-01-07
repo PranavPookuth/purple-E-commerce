@@ -152,26 +152,39 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'otp', 'otp_generated_at', 'is_verified', 'last_login']
 
+
 class UserProfileSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(write_only=True)  # Accept `username` as input
-    email = serializers.CharField(source='user.email', read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)  # Include username in the output
+
     class Meta:
         model = UserProfile
-        fields = [
-            'id', 'username', 'email', 'contact_number', 'whatsapp_number',
-            'address', 'profile_image', 'created_at'
-        ]
+        fields = ['id', 'username', 'contact_number', 'profile_image', 'whatsapp_number', 'address', 'created_at']
+        read_only_fields = ['created_at']
+
     def validate_username(self, value):
-        """Ensure the username exists."""
+        """
+        Validate that the username exists in the User model.
+        """
         try:
             user = User.objects.get(username=value)
+            return user
         except User.DoesNotExist:
-            raise serializers.ValidationError("User with this username does not exist.")
-        return user
+            raise serializers.ValidationError("No user found with this username.")
 
     def create(self, validated_data):
-        user = validated_data.pop('username')  # Extract the user instance
+        # Get the user object from the username
+        username = validated_data.pop('username', None)
+        user = self.validate_username(username)
+
+        if UserProfile.objects.filter(user=user).exists():
+            raise serializers.ValidationError({"user": "A profile for this user already exists."})
+
         return UserProfile.objects.create(user=user, **validated_data)
+
+    def update(self, instance, validated_data):
+        # Prevent updating the associated user via username
+        validated_data.pop('username', None)
+        return super().update(instance, validated_data)
 
 class CategorySerializer(serializers.ModelSerializer):
     category_image = serializers.ImageField(max_length=None, use_url=True)
