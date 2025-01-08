@@ -243,7 +243,7 @@ class ProductSerializer(serializers.ModelSerializer):
             ProductImage.objects.create(product=product, image=image)
 
         return product
-
+ 
     def update(self, instance, validated_data):
         # Extract uploaded_images from the validated data
         uploaded_images = validated_data.pop('uploaded_images', [])
