@@ -226,6 +226,7 @@ class CategoryCreateView(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
+
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = []
     authentication_classes = []
@@ -316,6 +317,7 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
             }, status=status.HTTP_200_OK)
         except Products.DoesNotExist:
             return Response({'error':  'Product not found!'}, status=status.HTTP_404_NOT_FOUND)
+
 
     def update(self, request, *args, **kwargs):
         """
