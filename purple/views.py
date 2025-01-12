@@ -317,7 +317,7 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
             }, status=status.HTTP_200_OK)
         except Products.DoesNotExist:
             return Response({'error':  'Product not found!'}, status=status.HTTP_404_NOT_FOUND)
-
+rfg
     def update(self, request, *args, **kwargs):
         """
         Handle PUT or PATCH request to update a product
