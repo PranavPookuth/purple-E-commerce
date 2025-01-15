@@ -9,4 +9,4 @@ class VendorListViews(generics.ListCreateAPIView):
     permission_classes = []
     authentication_classes = []
     queryset = Vendors.objects.all()
-    serializer_class = VendorCreateSerializer
+    serializer_class = VendorSerializer
