@@ -318,7 +318,7 @@ class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
         except Products.DoesNotExist:
             return Response({'error':  'Product not found!'}, status=status.HTTP_404_NOT_FOUND)
 
-rejhjerhjhjhjrjhi
+
     def update(self, request, *args, **kwargs):
         """
         Handle PUT or PATCH request to update a product
