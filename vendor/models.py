@@ -10,7 +10,7 @@ class Vendors(models.Model):
     whatsapp_number = models.CharField(max_length=15,unique=True)
     email = models.EmailField(unique=True)
     otp = models.CharField(max_length=4, blank=True, null=True)
-    display_image = models.ImageField(upload_to='display_image', null=True, blank=True)
+    display_image = models.ImageField(upload_to='display_image', null=False, blank=False)
     is_active = models.BooleanField(default=True)
     is_approved = models.BooleanField(default=False)
     otp_expiry = models.DateTimeField(null=True, blank=True)
