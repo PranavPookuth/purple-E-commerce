@@ -10,3 +10,11 @@ class VendorListViews(generics.ListCreateAPIView):
     authentication_classes = []
     queryset = Vendors.objects.all()
     serializer_class = VendorSerializer
+
+class VendorDetailViews(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = []
+    authentication_classes = []
+    queryset = Vendors.objects.all()
+    serializer_class = VendorSerializer
+
+

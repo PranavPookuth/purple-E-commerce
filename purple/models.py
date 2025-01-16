@@ -4,29 +4,41 @@ from django.db import models
 from django.utils import timezone
 
 
+from random import randint
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.db import models
+from django.utils import timezone
+
+
 class UserManager(BaseUserManager):
-    def create_user(self, username, email, otp, **extra_fields):
+    def create_user(self, username, email, otp, password=None, **extra_fields):
         if not email:
             raise ValueError('The Email field must be set')
         email = self.normalize_email(email)
+        extra_fields.setdefault('is_active', True)
         user = self.model(username=username, email=email, otp=otp, **extra_fields)
+        user.set_password(password)  # Hash the password
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, email, otp=None, **extra_fields):
-        # Automatically generate a random OTP if not provided
+    def create_superuser(self, username, email, otp=None, password=None, **extra_fields):
         if otp is None:
             otp = str(randint(100000, 999999))  # Random 6-digit OTP
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        return self.create_user(username, email, otp, **extra_fields)
+        return self.create_user(username, email, otp, password, **extra_fields)
 
-class User(AbstractBaseUser):
+
+class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=255, unique=True)
     otp = models.CharField(max_length=6, blank=True, null=True)
     otp_generated_at = models.DateTimeField(null=True, blank=True)
     is_verified = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False)  # Required for admin access
+    is_superuser = models.BooleanField(default=False)  # Required for superuser access
+    is_active = models.BooleanField(default=True)  # Required for user activation
+    date_joined = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
@@ -37,7 +49,7 @@ class User(AbstractBaseUser):
         return self.username
 
     def is_otp_expired(self):
-        """ Check if the OTP has expired (5 minutes window). """
+        """Check if the OTP has expired (5-minute window)."""
         if not self.otp_generated_at:
             return True  # No OTP generated yet
         return timezone.now() > self.otp_generated_at + timezone.timedelta(minutes=5)

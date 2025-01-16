@@ -4,6 +4,9 @@ from datetime import datetime
 from django.conf import settings
 
 
+from rest_framework import serializers
+from .models import Vendors
+
 class VendorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vendors
