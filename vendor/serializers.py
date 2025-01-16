@@ -25,3 +25,4 @@ class VendorSerializer(serializers.ModelSerializer):
             'is_fully_active',
         ]
         read_only_fields = ['id', 'created_at', 'is_fully_active']
+ 
