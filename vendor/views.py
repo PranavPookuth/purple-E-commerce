@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from pyexpat.errors import messages
 from rest_framework.response import Response
 
 from . serializers import *
@@ -66,3 +67,37 @@ class VendorAdminAcceptReject(generics.UpdateAPIView):
             {'status': 'Vendor registration approved.' if approval_status else 'Vendor registration rejected.'},
             status=status.HTTP_200_OK
         )
+
+#for enable or disable vendors-Admin
+class VendorEnbaleDisableView(generics.UpdateAPIView):
+    permission_classes = []
+    authentication_classes = []
+    queryset = Vendors.objects.all()
+    serializer_class = VendorSerializer
+
+    def update(self, request, *args, **kwargs):
+        vendor = self.get_object()
+        enable_status = request.data.get('is_active')
+        if isinstance(enable_status,str):
+            enable_status = enable_status.lower() in ["true","1"]
+        if enable_status not in [True,False]:
+            return Response({'error':'Invalid status.Must be a Boolean(True/False).'},status=status.HTTP_400_BAD_REQUEST)
+
+        vendor.is_active = enable_status
+        vendor.save()
+        message = 'Vendor status enabled.' if enable_status else 'vendor status disabled'
+        return Response({'status':message},status=status.HTTP_200_OK)
+
+class VendorFilterListView(generics.ListAPIView):
+    permission_classes = []
+    authentication_classes = []
+    queryset = Vendors.objects.all()
+    serializer_class = VendorSerializer
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        status = self.request.queryser_params.get('status',None)
+
+        if status:
+            queryset =queryset.filter(is_approved=status)
+
+        return queryset
