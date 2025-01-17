@@ -1,10 +1,11 @@
-from django.shortcuts import render
-from pyexpat.errors import messages
+import random
+from django.core.mail import send_mail
+from django.utils import timezone
 from rest_framework.response import Response
-
-from . serializers import *
+from rest_framework.views import APIView
+from .serializers import *
 from .models import *
-from rest_framework import generics,status
+from rest_framework import generics, status
 
 
 # Create your views here.
@@ -95,9 +96,76 @@ class VendorFilterListView(generics.ListAPIView):
     serializer_class = VendorSerializer
     def get_queryset(self):
         queryset = super().get_queryset()
-        status = self.request.queryser_params.get('status',None)
+        status = self.request.query_params.get('status',None)
 
         if status:
             queryset =queryset.filter(is_approved=status)
 
         return queryset
+
+
+# Generate and Send OTP via Email
+def generate_and_send_otp(vendor):
+    otp = str(random.randint(100000, 999999))
+    vendor.otp = otp
+    vendor.otp_expiry = datetime.now() + timedelta(minutes=5)
+    vendor.save()
+
+    send_mail(
+        'Your Login OTP',
+        f'Your OTP login code is {otp}.',
+        'praveen.codeedex@gmail.com',  # Replace with your sender email
+        [vendor.email],
+        fail_silently=False
+    )
+
+# Vendor Login with OTP Generation
+class VendorLoginView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    def post(self, request):
+        serializer = VendorLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+
+        try:
+            vendor = Vendors.objects.get(email=email)
+        except Vendors.DoesNotExist:
+            return Response({"error": "Vendor Not Found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if not vendor.is_approved:
+            return Response({"error": "Your account has not been approved yet. Please contact support."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        generate_and_send_otp(vendor)
+        return Response({"message": "OTP sent to email"}, status=status.HTTP_200_OK)
+
+
+class VendorOtpVerifyView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    def post(self, request):
+        serializer = VendorOtpVerifySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        otp = serializer.validated_data['otp']
+
+        try:
+            admin = Vendors.objects.get(email=email, otp=otp)
+        except Vendors.DoesNotExist:
+            return Response({'error': "Invalid OTP or Email"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if OTP is expired
+        if admin.otp_expiry and admin.otp_expiry < timezone.now():
+            return Response({'error': "OTP has expired"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Clear OTP after successful verification
+        admin.otp = None
+        admin.otp_expiry = None
+        admin.save()  # Correctly call save() on the instance
+
+        return Response({'message': "OTP verified successfully"}, status=status.HTTP_200_OK)
+
+

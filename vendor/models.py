@@ -1,15 +1,18 @@
 from django.db import models
-from datetime import datetime
-import uuid
+from datetime import datetime, timedelta
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from rest_framework.permissions import BasePermission
+import random
+import uuid
+
+
 # Create your models here.
 class Vendors(models.Model):
     name = models.CharField(max_length=225,unique=True)
     contact_number = models.CharField(max_length=15,unique=True)
     whatsapp_number = models.CharField(max_length=15,unique=True)
     email = models.EmailField(unique=True)
-    otp = models.CharField(max_length=4, blank=True, null=True)
+    otp = models.CharField(max_length=6, blank=True, null=True)
     display_image = models.ImageField(upload_to='display_image', null=False, blank=False)
     is_active = models.BooleanField(default=True)
     is_approved = models.BooleanField(default=False)
@@ -24,3 +27,8 @@ class Vendors(models.Model):
         """Determine if the vendor is active and approved."""
         return self.is_active and self.is_approved
 
+    def generate_otp(self):
+        """Generate a random 6-digit OTP and set expiry."""
+        self.otp = str(random.randint(100000, 999999))
+        self.otp_expiry = datetime.now() + timedelta(minutes=5)
+        self.save()
