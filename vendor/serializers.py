@@ -25,4 +25,21 @@ class VendorSerializer(serializers.ModelSerializer):
             'is_fully_active',
         ]
         read_only_fields = ['id', 'created_at', 'is_fully_active']
+
+        def validate_conatct_number(self,value):
+            if Vendors.object.filter(contact_number=value).exist():
+                raise serializers.ValidationError("vendor with this contact number already exist")
+            return value
+
+        def validate_whatsapp_number(self, value):
+            if Vendors.objects.filter(whatsapp_number=value).exists():
+                raise serializers.ValidationError("A vendor with this WhatsApp number already exists.")
+            return value
+
+        def validate_email(self, value):
+            if Vendors.objects.filter(email=value).exists():
+                raise serializers.ValidationError("A vendor with this email already exists.")
+            return value
+
+
  
