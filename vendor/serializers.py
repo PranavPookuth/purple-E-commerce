@@ -41,5 +41,9 @@ class VendorSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("A vendor with this email already exists.")
             return value
 
+class VendorLoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
 
- 
+class VendorOtpVerifySerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.CharField(max_length=6)
