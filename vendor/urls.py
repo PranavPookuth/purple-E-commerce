@@ -23,4 +23,6 @@ urlpatterns=[
 #vendor Otp Verify
     path('vendor-otpverify/',VendorOTPVerifyView.as_view(),name='vendor-otp-verify'),
 
+#vendor Approval Status
+    path('vendor-approval-status/<int:id>/', VendorApprovalStatusView.as_view(), name='vendor-approval-status'),
 ]
