@@ -26,8 +26,11 @@ class VendorSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         request = self.context.get('request')  # Get the request object
+
         if instance.display_image:
+            # Build the full URL for the image
             representation['display_image'] = request.build_absolute_uri(instance.display_image.url)
+
         return representation
 
     # Validation for contact_number
