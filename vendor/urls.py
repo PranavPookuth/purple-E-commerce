@@ -21,6 +21,6 @@ urlpatterns=[
 #vendor Login
     path('vendor-login/',VendorLoginView.as_view(),name="vendor-login"),
 #vendor Otp Verify
-    path('vendor-otpverify/',VendorOtpVerifyView.as_view(),name='vendor-otp-verify'),
+    path('vendor-otpverify/',VendorOTPVerifyView.as_view(),name='vendor-otp-verify'),
 
 ]
