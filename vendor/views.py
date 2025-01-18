@@ -1,8 +1,11 @@
 import random
 from django.core.mail import send_mail
+from django.core.validators import validate_email
 from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+import vendor
 from .serializers import *
 from .models import *
 from rest_framework import generics, status
@@ -106,20 +109,23 @@ class VendorFilterListView(generics.ListAPIView):
 
 # Generate and Send OTP via Email
 def generate_and_send_otp(vendor):
+    """Generate a new OTP and send it via email."""
     otp = str(random.randint(100000, 999999))
     vendor.otp = otp
-    vendor.otp_expiry = datetime.now() + timedelta(minutes=5)
+    vendor.otp_expiry = timezone.now() + timedelta(minutes=5)
     vendor.save()
 
-    send_mail(
-        'Your Login OTP',
-        f'Your OTP login code is {otp}.',
-        'praveen.codeedex@gmail.com',  # Replace with your sender email
-        [vendor.email],
-        fail_silently=False
-    )
+    try:
+        send_mail(
+            'Your Login OTP',
+            f'Your OTP login code is {otp}.',
+            'praveen.codeedex@gmail.com',  # Replace with your sender email
+            [vendor.email],
+            fail_silently=False
+        )
+    except Exception as e:
+        return Response({'error': f'Failed to send OTP: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-# Vendor Login with OTP Generation
 class VendorLoginView(APIView):
     permission_classes = []
     authentication_classes = []
@@ -129,9 +135,8 @@ class VendorLoginView(APIView):
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data['email']
 
-        try:
-            vendor = Vendors.objects.get(email=email)
-        except Vendors.DoesNotExist:
+        vendor = Vendors.objects.filter(email=email).first()
+        if not vendor:
             return Response({"error": "Vendor Not Found"}, status=status.HTTP_404_NOT_FOUND)
 
         if not vendor.is_approved:
@@ -141,8 +146,7 @@ class VendorLoginView(APIView):
         generate_and_send_otp(vendor)
         return Response({"message": "OTP sent to email"}, status=status.HTTP_200_OK)
 
-
-class VendorOtpVerifyView(APIView):
+class VendorOTPVerifyView(APIView):
     permission_classes = []
     authentication_classes = []
 
@@ -152,20 +156,28 @@ class VendorOtpVerifyView(APIView):
         email = serializer.validated_data['email']
         otp = serializer.validated_data['otp']
 
-        try:
-            admin = Vendors.objects.get(email=email, otp=otp)
-        except Vendors.DoesNotExist:
-            return Response({'error': "Invalid OTP or Email"}, status=status.HTTP_400_BAD_REQUEST)
+        vendor_admin = Vendors.objects.filter(email=email).first()
+        if not vendor_admin:
+            return Response({"error": "Vendor not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if OTP matches
+        if vendor_admin.otp != otp:
+            generate_and_send_otp(vendor_admin)  # Send a new OTP
+            return Response({"error": "Invalid OTP. A new OTP has been sent to your email."},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         # Check if OTP is expired
-        if admin.otp_expiry and admin.otp_expiry < timezone.now():
-            return Response({'error': "OTP has expired"}, status=status.HTTP_400_BAD_REQUEST)
+        if vendor_admin.otp_expiry and vendor_admin.otp_expiry < timezone.now():
+            generate_and_send_otp(vendor_admin)
+            return Response({"error": "OTP has expired. A new OTP has been sent to your email."},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         # Clear OTP after successful verification
-        admin.otp = None
-        admin.otp_expiry = None
-        admin.save()  # Correctly call save() on the instance
+        vendor_admin.otp = None
+        vendor_admin.otp_expiry = None
+        vendor_admin.save()
 
-        return Response({'message': "OTP verified successfully"}, status=status.HTTP_200_OK)
-
-
+        return Response({
+            "message": "OTP verified successfully",
+            "vendor_admin_id": vendor_admin.id
+        }, status=status.HTTP_200_OK)
