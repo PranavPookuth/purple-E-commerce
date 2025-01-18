@@ -32,3 +32,5 @@ class Vendors(models.Model):
         self.otp = str(random.randint(100000, 999999))
         self.otp_expiry = datetime.now() + timedelta(minutes=5)
         self.save()
+
+

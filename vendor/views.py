@@ -181,3 +181,20 @@ class VendorOTPVerifyView(APIView):
             "message": "OTP verified successfully",
             "vendor_admin_id": vendor_admin.id
         }, status=status.HTTP_200_OK)
+
+class VendorApprovalStatusView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    def get(self, request, *args, **kwargs):
+        vendor_id = kwargs.get('id')
+        try:
+            vendor = Vendors.objects.get(id=vendor_id)
+        except Vendors.DoesNotExist:
+            return Response({'error': 'Vendor Not Found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Serializer the vendor object and return the response
+        serializer = VendorSerializer(vendor)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
