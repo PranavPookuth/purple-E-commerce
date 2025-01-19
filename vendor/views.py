@@ -145,6 +145,7 @@ class VendorLoginView(APIView):
 
         generate_and_send_otp(vendor)
         return Response({"message": "OTP sent to email"}, status=status.HTTP_200_OK)
+    
 
 class VendorOTPVerifyView(APIView):
     permission_classes = []
