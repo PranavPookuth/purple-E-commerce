@@ -195,6 +195,6 @@ class VendorApprovalStatusView(APIView):
             return Response({'error': 'Vendor Not Found'}, status=status.HTTP_404_NOT_FOUND)
 
         # Serializer the vendor object and return the response
-        serializer = VendorSerializer(vendor, context={'request': request})
+        serializer = VendorSerializer(vendor , context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
