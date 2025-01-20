@@ -47,5 +47,4 @@ urlpatterns=[
     path('order/<int:pk>/', Allorderdetailview.as_view(), name='order-detail'),
 
 
-
 ]
