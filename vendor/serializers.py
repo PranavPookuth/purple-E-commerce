@@ -57,3 +57,8 @@ class VendorLoginSerializer(serializers.Serializer):
 class VendorOtpVerifySerializer(serializers.Serializer):
     email = serializers.EmailField()
     otp = serializers.CharField(max_length=6)
+
+class VendorApprovalStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vendors
+        fields = ['id', 'is_approved']
