@@ -41,8 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'purple',
     'vendor',
+    'purple',
+
 ]
 
 MIDDLEWARE = [
@@ -144,5 +145,5 @@ AUTHENTICATION_BACKENDS=(
     'purple.backends.EmailBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
-
 AUTH_USER_MODEL = 'purple.User'
+
