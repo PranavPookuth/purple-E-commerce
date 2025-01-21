@@ -1,6 +1,6 @@
 from django.urls import path
 from purple.views.userdetails import *
-from purple.views.subadmin import *
+
 
 urlpatterns=[
     path('admin-login/', AdminLoginView.as_view(), name='admin-login'),
