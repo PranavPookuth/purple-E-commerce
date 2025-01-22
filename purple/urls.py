@@ -1,3 +1,5 @@
+from tkinter.font import names
+
 from django.urls import path
 from purple.views.userdetails import *
 
@@ -10,8 +12,13 @@ urlpatterns=[
     path('request-otp/',RequestOTPView.as_view(),name='request-otp'),
     path('login/',LoginView.as_view(),name='login'),
 
-    path('user/',UserListCreateView.as_view(),name='user-list'),
-    path('user/<int:pk>/',UserDetailView.as_view(),name='user-details'),
+    path('addresses/', AddressAPIView.as_view(), name='address-list'),  # List & Create
+    path('addresses/<int:pk>/',AddressUpdateView.as_view(),name='address-detail'),
+
+    path('users/update/', UserUpdateView.as_view(), name='user-update'),
+    path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
+    path('users/', UserListView.as_view(), name='user-list'),
+
 
 
 ]

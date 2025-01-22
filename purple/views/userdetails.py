@@ -1,5 +1,4 @@
 from django.shortcuts import render
-from rest_framework.views import APIView
 from rest_framework import status
 from django.utils import timezone
 from rest_framework.views import APIView
@@ -176,16 +175,78 @@ class LoginView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-class UserListCreateView(generics.ListCreateAPIView):
+class AddressAPIView(APIView):
     permission_classes = []
     authentication_classes = []
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
 
-class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
+    def post(self, request):
+        """Create a new address, ensuring user_id is provided."""
+        if "user" not in request.data:
+            return Response({"error": "user_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = AddressSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AddressUpdateView(generics.UpdateAPIView):
+    permission_classes = []  # No authentication required
+    authentication_classes = []  # Disable authentication
+    queryset = Address.objects.all()  # Fetch all addresses
+    serializer_class = AddressSerializer  # Use your AddressSerializer
+
+class UserUpdateView(APIView):
+    """
+    API view to update user details (name and email).
+    """
+    permission_classes = []  # Allow access without authentication (if needed)
+    authentication_classes = []  # Remove authentication if not required
+
+    def get(self, request):
+        """
+        Get user details (username, email) excluding superusers.
+        """
+        users = User.objects.filter(is_superuser=False)  # Exclude superusers
+        serializer = UserUpdateSerializer(users, many=True)
+        return Response(serializer.data)
+
+    def put(self, request):
+        """
+        Update user details (username, email).
+        """
+        serializer = UserUpdateSerializer(request.user, data=request.data, partial=True, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "message": "User details updated successfully",
+                "user": serializer.data
+            })
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserDetailView(generics.RetrieveDestroyAPIView):
     permission_classes = []
     authentication_classes = []
+    """
+    Retrieve or delete a user and their associated addresses.
+    """
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = UserDetailSerializer
 
+    def get_queryset(self):
+        """
+        Filter queryset to allow only admins to view user details.
+        """
+        return User.objects.all()
+
+
+class UserListView(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = CustomUserListSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return User.objects.filter(is_staff=False, is_superuser=False)
