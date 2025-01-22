@@ -1,5 +1,5 @@
 import pytz
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
@@ -199,11 +199,59 @@ class VerifyOTPLoginSerializer(serializers.Serializer):
 
         return data
 
-class UserSerializer(serializers.ModelSerializer):
+User = get_user_model()
+
+class AddressSerializer(serializers.ModelSerializer):
+    user = serializers.IntegerField(write_only=True)
+    class Meta:
+        model = Address
+        fields = '__all__'  # Include all fields
+        read_only_fields = ['created_at', 'updated_at']
+
+    def create(self, validated_data):
+        """Assign user instance instead of user_id."""
+        user = validated_data.pop('user')  # Extract the user_id from validated data
+        user = User.objects.get(id=user)  # Retrieve the User instance using the ID
+        return Address.objects.create(user=user, **validated_data)
+
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    addresses = AddressSerializer(many=True, read_only=True)
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'otp', 'otp_generated_at', 'is_verified', 'last_login']
+        fields = [
+            'id','username', 'email',
+            'is_verified', 'is_active', 'is_staff',
+             'addresses'
+        ]
 
+
+class CustomUserListSerializer(serializers.ModelSerializer):
+    addresses = AddressSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'email',
+            'is_verified', 'is_active', 'is_staff',
+            'date_joined', 'addresses'
+        ]
+
+User = get_user_model()
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User  # Referring to the CustomUser model
+        fields = ['username', 'email']
+
+    def validate_email(self, value):
+        # Add custom validation if needed
+        user = self.context['request'].user
+        if User.objects.filter(email=value).exclude(id=user.id).exists():
+            raise serializers.ValidationError("This email is already associated with another account.")
+        return value
 
 
 

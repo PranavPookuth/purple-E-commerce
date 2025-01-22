@@ -51,3 +51,24 @@ class User(AbstractBaseUser, PermissionsMixin):  # Added PermissionsMixin
         if not self.otp_generated_at:
             return True  # No OTP generated yet
         return timezone.now() > self.otp_generated_at + timezone.timedelta(minutes=5)
+
+
+class Address(models.Model):
+    user = models.ForeignKey(User, related_name='addresses', on_delete=models.CASCADE)
+    address_line1 = models.CharField(max_length=255)
+    address_line2 = models.CharField(max_length=255, blank=True, null=True)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    country = models.CharField(max_length=100)
+    pincode = models.CharField(max_length=10)
+    is_primary = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.address_line1}, {self.city}, {self.state}, {self.country}, {self.pincode}"
+
+    class Meta:
+        ordering = ['-created_at']
+
+
