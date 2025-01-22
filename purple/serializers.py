@@ -228,7 +228,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
         ]
 
 
-class CustomUserListSerializer(serializers.ModelSerializer):
+class UserListSerializer(serializers.ModelSerializer):
     addresses = AddressSerializer(many=True, read_only=True)
 
     class Meta:
@@ -253,6 +253,14 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("This email is already associated with another account.")
         return value
 
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
 
+        def validate_category_image(self, value):
+            if value.size > 5 * 1024 * 1024:  # 5MB limit
+                raise serializers.ValidationError("Image file is too large. Maximum size is 5MB.")
+            return value
 
 

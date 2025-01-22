@@ -71,4 +71,10 @@ class Address(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+class Category(models.Model):
+    category_name =  models.CharField(max_length=100,null=False,blank=False)
+    category_image = models.ImageField(upload_to='category_image')
+    created_at = models.DateTimeField(auto_now_add=True,null=True)
 
+    def __str__(self):
+        return self.category_name

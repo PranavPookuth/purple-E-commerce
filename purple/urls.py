@@ -1,5 +1,3 @@
-from tkinter.font import names
-
 from django.urls import path
 from purple.views.userdetails import *
 
@@ -18,6 +16,9 @@ urlpatterns=[
     path('users/update/', UserUpdateView.as_view(), name='user-update'),
     path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
     path('users/', UserListView.as_view(), name='user-list'),
+
+    path('category/',CategoryListView.as_view(),name='category-list'),
+    path('category/<int:pk>/',CategoryDeatilView.as_view(),name='category-details'),
 
 
 

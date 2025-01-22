@@ -244,9 +244,23 @@ class UserDetailView(generics.RetrieveDestroyAPIView):
 
 
 class UserListView(generics.ListAPIView):
+    permission_class = []
+    authentication_classes = []
     queryset = User.objects.all()
-    serializer_class = CustomUserListSerializer
-    permission_classes = [IsAdminUser]
+    serializer_class = UserListSerializer
 
     def get_queryset(self):
         return User.objects.filter(is_staff=False, is_superuser=False)
+
+
+class CategoryListView(generics.ListCreateAPIView):
+    permission_classes = []
+    authentication_classes = []
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+class CategoryDeatilView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = []
+    authentication_classes = []
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
