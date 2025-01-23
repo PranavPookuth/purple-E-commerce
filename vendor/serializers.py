@@ -3,6 +3,7 @@ from .models import *
 from datetime import datetime
 from rest_framework import serializers
 from .models import Vendors
+from purple.models import Category
 
 class VendorSerializer(serializers.ModelSerializer):
     class Meta:
@@ -62,3 +63,10 @@ class VendorApprovalStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vendors
         fields = ['id', 'is_approved']
+
+
+class VendorCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
+

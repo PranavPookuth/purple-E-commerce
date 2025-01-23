@@ -32,8 +32,3 @@ class Vendors(models.Model):
         self.otp = str(random.randint(100000, 999999))
         self.otp_expiry = datetime.now() + timedelta(minutes=5)
         self.save()
-
-class Category(models.Model):
-    name = models.CharField(max_length=225,unique=True)
-    category_image = models.ImageField(upload_to='category',null=False,blank=False)
-    vendor = models.ManyToManyField(Vendors,related_name='categories')

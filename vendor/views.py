@@ -198,3 +198,9 @@ class VendorApprovalStatusView(APIView):
         serializer = VendorApprovalStatusSerializer(vendor , context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+class VendorCategoryViewList(generics.ListCreateAPIView):
+    permission_classes = []
+    authentication_classes = []
+    queryset = Category.objects.all()
+    serializer_class = VendorCategorySerializer
+
