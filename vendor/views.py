@@ -4,11 +4,13 @@ from django.core.validators import validate_email
 from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from rest_framework.exceptions import NotFound
 import vendor
 from .serializers import *
 from .models import *
 from rest_framework import generics, status
+from purple.models import Category
+from purple.serializers import CategorySerializer
 
 
 # Create your views here.
@@ -198,9 +200,39 @@ class VendorApprovalStatusView(APIView):
         serializer = VendorApprovalStatusSerializer(vendor , context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-class VendorCategoryViewList(generics.ListCreateAPIView):
+
+class VendorByCategoryView(generics.ListAPIView):
+    serializer_class = VendorSerializer
+    permission_classes = []
+
+    def get_queryset(self):
+        category_name = self.request.query_params.get('category_name', None)
+
+        if not category_name:
+            raise NotFound("Category name is required.")
+
+        # Check if the category exists and is enabled
+        category_exists = Category.objects.filter(category_name__icontains=category_name, Enable_category=True).exists()
+        if not category_exists:
+            raise NotFound("No categories found with the given name.")
+
+        # Get vendors associated with the category name
+        vendors = Vendors.objects.filter(category__category_name__icontains=category_name, is_active=True,
+                                         is_approved=True)
+
+        if not vendors.exists():
+            raise NotFound("No approved and active vendors found for this category.")
+
+        return vendors
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=200)
+
+
+class VendorCategoryListView(generics.ListAPIView):
     permission_classes = []
     authentication_classes = []
     queryset = Category.objects.all()
-    serializer_class = VendorCategorySerializer
-
+    serializer_class = CategorySerializer
