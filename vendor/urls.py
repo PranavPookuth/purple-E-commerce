@@ -26,6 +26,8 @@ urlpatterns=[
 #vendor Approval Status
     path('vendor-approval-status/<int:id>/', VendorApprovalStatusView.as_view(), name='vendor-approval-status'),
 
+#vendor Category
+    path('vendors/by-category/', VendorCategoryListView.as_view(), name='vendor-by-category'),
 
 
 ]
