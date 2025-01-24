@@ -263,4 +263,14 @@ class CategorySerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Image file is too large. Maximum size is 5MB.")
             return value
 
+class CarouselSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Carousel
+        fields = '__all__'
+
+class BannerImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BannerImage
+        fields = '__all__'
+
 
