@@ -230,7 +230,6 @@ class VendorByCategoryView(generics.ListAPIView):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=200)
 
-
 class VendorCategoryListView(generics.ListAPIView):
     permission_classes = []
     authentication_classes = []
