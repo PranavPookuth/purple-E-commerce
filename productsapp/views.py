@@ -27,4 +27,3 @@ class ProductListView(generics.ListAPIView):
     authentication_classes = []
     queryset = Products.objects.all()
     serializer_class = ProductListSerializer
-rter
