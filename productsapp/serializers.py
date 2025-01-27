@@ -85,6 +85,8 @@ class ProductListSerializer(serializers.ModelSerializer):
             'id', 'vendor', 'vendor_name', 'category', 'category_name',
             'product_name', 'product_description', 'price', 'offerprice',
             'discount', 'isofferproduct', 'Popular_products', 'newarrival',
-            'trending_one', 'images', 'image_urls', 'isofferproduct'
+            'trending_one', 'image_urls', 'isofferproduct'
         ]
 
+class ProductSearchSerializer(serializers.Serializer):
+    search_query = serializers.CharField(required=True)
