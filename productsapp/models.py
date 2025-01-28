@@ -1,7 +1,7 @@
 from django.db import models
 from purple.models import Category
 from vendor.models import Vendors
-
+from purple.models import *
 # Create your models here.
 class Products(models.Model):
     vendor = models.ForeignKey(Vendors,related_name='products', on_delete=models.CASCADE)
@@ -39,6 +39,22 @@ class ProductImage(models.Model):
     def __str__(self):
         return f"Image for {self.product.product_name}"
 
+class Wishlist(models.Model):
+    user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='wishlist')
+    product = models.ForeignKey(Products,on_delete=models.CASCADE,related_name='wishlists')
+    added = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f'{self.user.username} - {self.product.product_name}'
+
+class ProductReview(models.Model):
+    product = models.ForeignKey(Products, on_delete=models.CASCADE, related_name='review')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews', null=True, blank=True)  # Allow null users
+    rating = models.DecimalField(max_digits=2, decimal_places=1, help_text='Rating from 1 to 5')
+    review = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Review by {self.user.username if self.user else "Anonymous"} - {self.product.product_name}'
 
 
