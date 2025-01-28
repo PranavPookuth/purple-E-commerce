@@ -228,3 +228,14 @@ class ProductReviewCreateUpdateView(generics.ListCreateAPIView):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+class ProductReviewDeleteView(APIView):
+    permission_classes = []  # No authentication required
+
+    def delete(self, request, review_id):
+        try:
+            review = ProductReview.objects.get(id=review_id)
+        except ProductReview.DoesNotExist:
+            return Response({"error": "Review not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        review.delete()
+        return Response({"message": "Review deleted successfully."}, status=status.HTTP_200_OK)
