@@ -1,6 +1,8 @@
+from django.conf import settings
 from rest_framework import serializers
 from  .models import *
 from vendor.models import Vendors
+from purple.models import *
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
@@ -90,3 +92,45 @@ class ProductListSerializer(serializers.ModelSerializer):
 
 class ProductSearchSerializer(serializers.Serializer):
     search_query = serializers.CharField(required=True)
+
+
+from django.conf import settings
+
+class WishlistSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.product_name', read_only=True)
+    price = serializers.DecimalField(source='product.offerprice', max_digits=10, decimal_places=2, read_only=True)
+    description = serializers.CharField(source='product.product_description', read_only=True)
+    image = serializers.SerializerMethodField()  # To get the image URL
+
+    class Meta:
+        model = Wishlist
+        fields = ['id', 'user', 'product', 'added', 'product_name', 'price', 'description', 'image']
+        read_only_fields = ['id', 'added']
+
+    def get_image(self, obj):
+        # Get the first image associated with the product
+        product_images = obj.product.product_images.all()
+        if product_images.exists():
+            image_path = product_images.first().product_image.url
+            # Get the full URL by combining the domain with the relative path
+            full_url = obj.product.product_images.first().product_image.url
+            # Using build_absolute_uri to get the full absolute URL
+            return settings.SITE_URL + full_url  # Assuming you have SITE_URL set in settings.py
+        return None
+
+class ProductReviewSerializer(serializers.ModelSerializer):
+    user = serializers.CharField(source='user.username', read_only=True)
+    product_name = serializers.CharField(source='product.product_name', read_only=True)
+
+    class Meta:
+        model = ProductReview
+        fields = ['id', 'product', 'product_name', 'user', 'rating', 'review', 'created_at']
+        read_only_fields = ['id', 'created_at', 'user', 'product_name']
+
+
+
+
+
+
+
+
