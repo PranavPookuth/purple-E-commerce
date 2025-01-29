@@ -268,9 +268,5 @@ class CarouselSerializer(serializers.ModelSerializer):
         model = Carousel
         fields = '__all__'
 
-class BannerImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BannerImage
-        fields = '__all__'
 
 

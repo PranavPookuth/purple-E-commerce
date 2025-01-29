@@ -1,3 +1,5 @@
+from lib2to3.fixer_util import is_list
+
 from django.shortcuts import render, get_object_or_404
 from rest_framework import generics, status
 from rest_framework.response import Response
@@ -10,18 +12,6 @@ from purple.models import *
 
 
 # Create your views here.
-# class ProductCreateView(generics.ListCreateAPIView):
-#     permission_classes = []
-#     authentication_classes = []
-#     queryset = Products.objects.all()
-#     serializer_class = ProductSerializer
-
-# class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
-#     permission_classes = []
-#     authentication_classes = []
-#     queryset = Products.objects.all()
-#     serializer_class = ProductSerializer
-
 class ProductCreateListView(generics.ListCreateAPIView):
     permission_classes = []
     authentication_classes = []
@@ -141,7 +131,6 @@ class WishlistView(APIView):
     """
     API to manage Wishlist without authentication
     """
-
 
     def get(self, request):
         """
@@ -269,3 +258,24 @@ class AddToCartView(APIView):
         # Serialize and return the updated cart
         serializer = CartSerializer(cart_item, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class BannerImageCreateView(generics.ListCreateAPIView):
+    permission_classes = []
+    authentication_classes = []
+    serializer_class = BannerImageSerializer
+
+    def get_queryset(self):
+        return BannerImage.objects.filter(is_active=True)
+
+
+class BannerImageDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = []
+    authentication_classes = []
+    queryset = BannerImage.objects.all()
+    serializer_class = BannerImageSerializer
+
+class BannerImageListView(generics.ListAPIView):
+    permission_classes = []
+    authentication_classes = []
+    queryset = BannerImage.objects.all()
+    serializer_class = BannerImageSerializer

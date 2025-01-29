@@ -23,8 +23,6 @@ urlpatterns=[
     path('carousel/',CarouselListView.as_view(),name='carousel-list'),
     path('carousel/<int:pk>/',CarouselDetailView.as_view(),name='carouesl-details'),
 
-    path('bannerimage/',BannerImageListView.as_view(),name='banner-image-list'),
-    path('bannerimage/<int:pk>/',BannerImageDetailView.as_view(),name='banner-image-details'),
 
 
 

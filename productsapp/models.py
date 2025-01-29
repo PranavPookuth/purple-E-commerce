@@ -1,3 +1,4 @@
+from email.policy import default
 from itertools import product
 
 from django.db import models
@@ -84,4 +85,16 @@ class Cart(models.Model):
     def __str__(self):
         return f"Cart item for {self.user.username} - {self.product.product_name}"
 
+
+class BannerImage(models.Model):
+    vendor = models.ForeignKey(Vendors,on_delete=models.CASCADE,related_name='food_banner')
+    product = models.ForeignKey(Products,on_delete=models.CASCADE,related_name='food_banner_products')
+    banner_image = models.ImageField(upload_to='banner_image',help_text='Upload the banner image')
+    description = models.TextField(null=True,blank=True,help_text='Short description of the offer')
+    is_active = models.BooleanField(default=True,help_text='only active banners will be displayed')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.product.name} - {self.vendor.name}"
 
