@@ -128,6 +128,22 @@ class ProductReviewSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'user', 'product_name']
 
 
+class CartSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField(read_only=True)
+    product =ProductSerializer(read_only=True)
+    total_price = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Cart
+        fields = ["id", "user", "product", "quantity", "price", "total_price", "created_at", "updated_at"]
+        read_only_fields = ["id", "total_price", "created_at", "updated_at"]
+
+    def get_total_price(self, obj):
+        """Calculate total price dynamically."""
+        price = obj.product.offerprice if obj.product.isofferproduct and obj.product.offerprice else obj.product.price
+        return price * obj.quantity if price else 0  # Fallback to 0 if price is None
+
+
 
 
 

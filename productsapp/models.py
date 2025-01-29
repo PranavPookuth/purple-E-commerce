@@ -1,3 +1,5 @@
+from itertools import product
+
 from django.db import models
 from purple.models import Category
 from vendor.models import Vendors
@@ -56,5 +58,30 @@ class ProductReview(models.Model):
 
     def __str__(self):
         return f'Review by {self.user.username if self.user else "Anonymous"} - {self.product.product_name}'
+
+
+class Cart(models.Model):
+    user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='cart')
+    product = models.ForeignKey(Products,on_delete=models.CASCADE,related_name='carts')
+    quantity = models.PositiveIntegerField(default=1)
+    price = models.DecimalField(max_digits=10,decimal_places=2,default=0.00)
+    created_at = models.DateTimeField(auto_now_add=True)
+    upadated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        """Set price when adding a product to the cart."""
+        if not self.price:
+            self.price = self.product.offerprice if self.product.offerprice else self.product.price
+        super().save(*args, **kwargs)
+
+    def total_price(self):
+        '''
+        calculate  total price using stored price
+        '''
+
+        return self.price * self.quantity
+
+    def __str__(self):
+        return f"Cart item for {self.user.username} - {self.product.product_name}"
 
 
