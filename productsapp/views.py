@@ -239,3 +239,33 @@ class ProductReviewDeleteView(APIView):
 
         review.delete()
         return Response({"message": "Review deleted successfully."}, status=status.HTTP_200_OK)
+
+
+class AddToCartView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    def post(self,request,user_id,product_id):
+        """Handles adding a product to the cart and updating quantity if already exists"""
+
+        #get the user and product or return 404
+
+        user = get_object_or_404(User,pk=user_id)
+        product = get_object_or_404(Products, pk=product_id)
+
+        #Get the quantity ,ensuring its an integer
+
+        quantity = int(request.data.get('quantity',1))
+
+        cart_item, created = Cart.objects.get_or_create(user=user, product=product)
+
+        if created:
+            cart_item.quantity = quantity
+        else:
+            cart_item.quantity += quantity  # Increase quantity if already exists
+
+        cart_item.save()
+
+        # Serialize and return the updated cart
+        serializer = CartSerializer(cart_item, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
