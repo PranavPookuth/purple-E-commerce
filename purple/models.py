@@ -83,8 +83,6 @@ class Carousel(models.Model):
     title = models.CharField(max_length=100)
     carousel_image = models.ImageField(upload_to='Carousel_images',null=False,blank=False)
 
-class BannerImage(models.Model):
-    title = models.CharField(max_length=100,null=True,blank=True)
-    banner_image = models.ImageField(upload_to='banner_image',null=False,blank=False)
+
 
 

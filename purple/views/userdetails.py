@@ -278,14 +278,4 @@ class CarouselDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Carousel.objects.all()
     serializer_class = CarouselSerializer
 
-class BannerImageListView(generics.ListCreateAPIView):
-    permission_classes = []
-    authentication_classes = []
-    queryset = BannerImage.objects.all()
-    serializer_class = BannerImageSerializer
 
-class BannerImageDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = []
-    authentication_classes = []
-    queryset = BannerImage.objects.all()
-    serializer_class = BannerImageSerializer
