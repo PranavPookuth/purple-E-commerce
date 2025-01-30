@@ -125,6 +125,27 @@ class PopularPorductsListView(generics.ListAPIView):
     def get_queryset(self):
         return Products.objects.filter(Popular_products=True)
 
+class BannerImageCreateView(generics.ListCreateAPIView):
+    permission_classes = []
+    authentication_classes = []
+    serializer_class = BannerImageSerializer
+
+    def get_queryset(self):
+        return BannerImage.objects.filter(is_active=True)
+
+
+class BannerImageDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = []
+    authentication_classes = []
+    queryset = BannerImage.objects.all()
+    serializer_class = BannerImageSerializer
+
+class BannerImageListView(generics.ListAPIView):
+    permission_classes = []
+    authentication_classes = []
+    queryset = BannerImage.objects.all()
+    serializer_class = BannerImageSerializer
+
 class WishlistView(APIView):
     permission_classes = []
     authentication_classes = []
@@ -259,23 +280,3 @@ class AddToCartView(APIView):
         serializer = CartSerializer(cart_item, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-class BannerImageCreateView(generics.ListCreateAPIView):
-    permission_classes = []
-    authentication_classes = []
-    serializer_class = BannerImageSerializer
-
-    def get_queryset(self):
-        return BannerImage.objects.filter(is_active=True)
-
-
-class BannerImageDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = []
-    authentication_classes = []
-    queryset = BannerImage.objects.all()
-    serializer_class = BannerImageSerializer
-
-class BannerImageListView(generics.ListAPIView):
-    permission_classes = []
-    authentication_classes = []
-    queryset = BannerImage.objects.all()
-    serializer_class = BannerImageSerializer
