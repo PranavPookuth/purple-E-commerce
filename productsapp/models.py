@@ -42,6 +42,18 @@ class ProductImage(models.Model):
     def __str__(self):
         return f"Image for {self.product.product_name}"
 
+class BannerImage(models.Model):
+    vendor = models.ForeignKey(Vendors,on_delete=models.CASCADE,related_name='food_banner')
+    product = models.ForeignKey(Products,on_delete=models.CASCADE,related_name='food_banner_products')
+    banner_image = models.ImageField(upload_to='banner_image',help_text='Upload the banner image')
+    description = models.TextField(null=True,blank=True,help_text='Short description of the offer')
+    is_active = models.BooleanField(default=True,help_text='only active banners will be displayed')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.product.name} - {self.vendor.name}"
+
 class Wishlist(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='wishlist')
     product = models.ForeignKey(Products,on_delete=models.CASCADE,related_name='wishlists')
@@ -67,7 +79,7 @@ class Cart(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=10,decimal_places=2,default=0.00)
     created_at = models.DateTimeField(auto_now_add=True)
-    upadated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
         """Set price when adding a product to the cart."""
@@ -86,15 +98,4 @@ class Cart(models.Model):
         return f"Cart item for {self.user.username} - {self.product.product_name}"
 
 
-class BannerImage(models.Model):
-    vendor = models.ForeignKey(Vendors,on_delete=models.CASCADE,related_name='food_banner')
-    product = models.ForeignKey(Products,on_delete=models.CASCADE,related_name='food_banner_products')
-    banner_image = models.ImageField(upload_to='banner_image',help_text='Upload the banner image')
-    description = models.TextField(null=True,blank=True,help_text='Short description of the offer')
-    is_active = models.BooleanField(default=True,help_text='only active banners will be displayed')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.product.name} - {self.vendor.name}"
 

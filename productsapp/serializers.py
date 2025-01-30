@@ -94,6 +94,21 @@ class ProductSearchSerializer(serializers.Serializer):
     search_query = serializers.CharField(required=True)
 
 
+class BannerImageSerializer(serializers.ModelSerializer):
+    banner_image = serializers.ImageField(required=True)
+    is_active = serializers.BooleanField(default=True)
+    class Meta:
+        model = BannerImage
+        fields = ['id', 'vendor', 'product', 'banner_image', 'description', 'is_active', 'created_at', 'updated_at']
+
+    def get_banner_image(self, obj):
+        request = self.context.get('request')
+        if obj.banner_image:
+            return request.build_absolute_uri(obj.banner_image.url) if request else obj.banner_image.url
+        return None
+
+
+
 from django.conf import settings
 
 class WishlistSerializer(serializers.ModelSerializer):
@@ -143,18 +158,6 @@ class CartSerializer(serializers.ModelSerializer):
         price = obj.product.offerprice if obj.product.isofferproduct and obj.product.offerprice else obj.product.price
         return price * obj.quantity if price else 0  # Fallback to 0 if price is None
 
-class BannerImageSerializer(serializers.ModelSerializer):
-    banner_image = serializers.ImageField(required=True)
-    is_active = serializers.BooleanField(default=True)
-    class Meta:
-        model = BannerImage
-        fields = ['id', 'vendor', 'product', 'banner_image', 'description', 'is_active', 'created_at', 'updated_at']
-
-    def get_banner_image(self, obj):
-        request = self.context.get('request')
-        if obj.banner_image:
-            return request.build_absolute_uri(obj.banner_image.url) if request else obj.banner_image.url
-        return None
 
 
 
