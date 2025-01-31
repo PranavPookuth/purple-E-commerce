@@ -29,7 +29,7 @@ urlpatterns = [
 
     path('cart/add/<int:user_id>/<int:product_id>/', AddToCartView.as_view(), name='add-to-cart'),
     path('cart/update/<int:user_id>/<int:product_id>/', UpdateCartView.as_view(), name='update-cart'),
-]
+
 
 
     path('product/review/',ProductReviewCreateUpdateView.as_view(),name='product-review'),
