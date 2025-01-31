@@ -24,7 +24,7 @@ urlpatterns = [
 
     path('product/banner/image/',BannerImageCreateView.as_view(),name='banner-image-create'),
     path('product/banner/image/<int:pk>/',BannerImageDetailView.as_view(),name='banner-detail-image'),
-    path('product/banner/image/list',BannerImageListView.as_view(),name='banner-image-list'),
+    path('product/banner/image/list/',BannerImageListView.as_view(),name='banner-image-list'),
 
 
     path('cart/add/<int:user_id>/<int:product_id>/', AddToCartView.as_view(), name='add-to-cart'),
