@@ -144,8 +144,8 @@ class ProductReviewSerializer(serializers.ModelSerializer):
 
 
 class CartSerializer(serializers.ModelSerializer):
-    user = serializers.SerializerMethodField(read_only=True)
-    product =ProductSerializer(read_only=True)
+    user = serializers.SerializerMethodField(read_only=True)  # You must define get_user()
+    product = ProductSerializer(read_only=True)
     total_price = serializers.SerializerMethodField()
 
     class Meta:
@@ -153,12 +153,14 @@ class CartSerializer(serializers.ModelSerializer):
         fields = ["id", "user", "product", "quantity", "price", "total_price", "created_at", "updated_at"]
         read_only_fields = ["id", "total_price", "created_at", "updated_at"]
 
+    def get_user(self, obj):
+        """Return the user's username or ID."""
+        return obj.user.username  # Or `obj.user.id` if you prefer the ID
+
     def get_total_price(self, obj):
         """Calculate total price dynamically."""
         price = obj.product.offerprice if obj.product.isofferproduct and obj.product.offerprice else obj.product.price
         return price * obj.quantity if price else 0  # Fallback to 0 if price is None
-
-
 
 
 

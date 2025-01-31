@@ -255,24 +255,32 @@ class AddToCartView(APIView):
     permission_classes = []
     authentication_classes = []
 
-    def post(self,request,user_id,product_id):
-        """Handles adding a product to the cart and updating quantity if already exists"""
+    def post(self, request, user_id, product_id):
+        """Handles adding a product to the cart and ensures quantity is explicitly provided"""
 
-        #get the user and product or return 404
-
-        user = get_object_or_404(User,pk=user_id)
+        # Get the user and product or return 404
+        user = get_object_or_404(User, pk=user_id)
         product = get_object_or_404(Products, pk=product_id)
 
-        #Get the quantity ,ensuring its an integer
+        # Ensure quantity is provided in the request data
+        quantity = request.data.get('quantity')
+        if quantity is None:
+            return Response({"error": "Quantity is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        quantity = int(request.data.get('quantity',1))
+        try:
+            quantity = int(quantity)
+            if quantity <= 0:
+                return Response({"error": "Quantity must be greater than zero"}, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError:
+            return Response({"error": "Quantity must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Create or update cart item
         cart_item, created = Cart.objects.get_or_create(user=user, product=product)
 
         if created:
-            cart_item.quantity = quantity
+            cart_item.quantity = quantity  # Set initial quantity
         else:
-            cart_item.quantity += quantity  # Increase quantity if already exists
+            cart_item.quantity = quantity  # Force user to explicitly update quantity
 
         cart_item.save()
 
@@ -280,3 +288,34 @@ class AddToCartView(APIView):
         serializer = CartSerializer(cart_item, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+class UpdateCartView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    def put(self, request, user_id, product_id):
+        """Handles updating the quantity of a product in the cart."""
+        user = get_object_or_404(User, pk=user_id)
+        product = get_object_or_404(Products, pk=product_id)
+
+        quantity = request.data.get('quantity')
+        if quantity is None:
+            return Response({"error": "Quantity is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            quantity = int(quantity)
+            if quantity <= 0:
+                return Response({"error": "Quantity must be greater than zero"}, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError:
+            return Response({"error": "Quantity must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Fetch the cart item if it exists
+        cart_item = Cart.objects.filter(user=user, product=product).first()
+
+        if not cart_item:
+            return Response({"error": "Cart item not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        cart_item.quantity = quantity
+        cart_item.save()
+
+        serializer = CartSerializer(cart_item, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
