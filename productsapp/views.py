@@ -320,6 +320,30 @@ class UpdateCartView(APIView):
         serializer = CartSerializer(cart_item, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def patch(self, request, user_id, product_id):
+        """Handles partial updates for the cart item."""
+        user = get_object_or_404(User, pk=user_id)
+        product = get_object_or_404(Products, pk=product_id)
+
+        cart_item = Cart.objects.filter(user=user, product=product).first()
+
+        if not cart_item:
+            return Response({"error": "Cart item not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        quantity = request.data.get('quantity')
+        if quantity is not None:
+            try:
+                quantity = int(quantity)
+                if quantity <= 0:
+                    return Response({"error": "Quantity must be greater than zero"}, status=status.HTTP_400_BAD_REQUEST)
+                cart_item.quantity = quantity
+            except ValueError:
+                return Response({"error": "Quantity must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)
+
+        cart_item.save()
+        serializer = CartSerializer(cart_item, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def delete(self, request, user_id, product_id):
         """Handles deleting a product from the cart."""
         user = get_object_or_404(User, pk=user_id)
@@ -332,4 +356,5 @@ class UpdateCartView(APIView):
 
         cart_item.delete()
         return Response({"message": "Cart item deleted successfully"}, status=status.HTTP_200_OK)
+
 
