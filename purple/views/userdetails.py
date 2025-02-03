@@ -88,7 +88,6 @@ class RegisterView(APIView):
 
             return Response({"message": "User registered successfully. OTP sent."}, status=status.HTTP_201_CREATED)
 
-
 class VerifyOTPView(APIView):
     permission_classes = []
     authentication_classes = []
@@ -96,43 +95,8 @@ class VerifyOTPView(APIView):
     def post(self, request):
         serializer = OTPVerifySerializer(data=request.data)
         if serializer.is_valid():
-            email = serializer.data['email']
-            otp = serializer.data['otp']
-            try:
-                user = User.objects.get(email=email)
-
-                # Check if OTP is expired
-                if user.is_otp_expired():
-                    new_otp = random.randint(100000, 999999)
-                    user.otp = new_otp
-                    user.otp_generated_at = timezone.now()  # Reset the timestamp
-                    user.save()
-
-                    # Send the new OTP to the user's email
-                    send_mail(
-                        'OTP Verification',
-                        f'Your new OTP is {new_otp}',
-                        'praveencodeedex@gmail.com',
-                        [user.email]
-                    )
-
-                    return Response({'message': 'OTP expired. A new OTP has been sent to your email.'},
-                                    status=status.HTTP_400_BAD_REQUEST)
-
-                # Check if OTP matches
-                if user.otp == otp:
-                    user.is_verified = True
-                    user.is_active = True
-                    user.otp = None  # Clear the OTP after successful verification
-                    user.save()
-
-                    return Response({'message': 'Email verified successfully! You can now log in.'},
-                                    status=status.HTTP_200_OK)
-                else:
-                    return Response({'message': 'Invalid OTP.'}, status=status.HTTP_400_BAD_REQUEST)
-
-            except User.DoesNotExist:
-                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'message': 'Email verified successfully! You can now log in.'},
+                            status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -173,7 +137,9 @@ class LoginView(APIView):
                 },
                 status=status.HTTP_200_OK
             )
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class AddressAPIView(APIView):
     permission_classes = []
