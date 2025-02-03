@@ -19,7 +19,7 @@ class UserManager(BaseUserManager):
 
     def create_superuser(self, username, email, otp=None, **extra_fields):
         if otp is None:
-            otp = str(randint(100000, 999999))  # Generate a random OTP
+            otp = str(random.randint(100000, 999999))  # Generate a random OTP
 
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
@@ -50,7 +50,9 @@ class User(AbstractBaseUser, PermissionsMixin):  # Added PermissionsMixin
         """ Check if the OTP has expired (5 minutes window). """
         if not self.otp_generated_at:
             return True  # No OTP generated yet
-        return timezone.now() > self.otp_generated_at + timezone.timedelta(minutes=5)
+        expiration_time = self.otp_generated_at + timezone.timedelta(minutes=5)
+        return timezone.now() > expiration_time
+
 
 
 class Address(models.Model):

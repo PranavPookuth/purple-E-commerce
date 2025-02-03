@@ -1,5 +1,3 @@
-from lib2to3.fixer_util import is_list
-
 from django.shortcuts import render, get_object_or_404
 from rest_framework import generics, status
 from rest_framework.response import Response
@@ -251,6 +249,39 @@ class ProductReviewDeleteView(APIView):
         return Response({"message": "Review deleted successfully."}, status=status.HTTP_200_OK)
 
 
+class ListCartView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    def get(self, request, user_id):
+        """Retrieve all cart items for a specific user grouped by vendor"""
+        user = get_object_or_404(User, pk=user_id)
+        cart_items = Cart.objects.filter(user=user)
+
+        if not cart_items.exists():
+            return Response({"message": "Cart is empty"}, status=status.HTTP_200_OK)
+
+        # Group products by vendor
+        cart_by_vendor = {}
+        for item in cart_items:
+            vendor_name = item.product.vendor.name
+            if vendor_name not in cart_by_vendor:
+                cart_by_vendor[vendor_name] = []
+            cart_by_vendor[vendor_name].append(item)
+
+        # Prepare data for each vendor
+        cart_data = []
+        for vendor_name, items in cart_by_vendor.items():
+            vendor_info = {
+                "vendor": vendor_name,
+                "vendor_id": items[0].product.vendor.id,  # Include vendor ID if needed
+                "products": CartSerializer(items, many=True, context={'request': request}).data
+            }
+            cart_data.append(vendor_info)
+
+        return Response(cart_data, status=status.HTTP_200_OK)
+
+
 class AddToCartView(APIView):
     permission_classes = []
     authentication_classes = []
@@ -356,5 +387,4 @@ class UpdateCartView(APIView):
 
         cart_item.delete()
         return Response({"message": "Cart item deleted successfully"}, status=status.HTTP_200_OK)
-
 

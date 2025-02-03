@@ -109,25 +109,51 @@ class OTPVerifySerializer(serializers.ModelSerializer):
         try:
             user = User.objects.get(email=email)
 
-            # Check if the OTP is expired
+            # Check if OTP is expired
             if user.is_otp_expired():
-                raise serializers.ValidationError("OTP has expired. Please request a new one.")
+                new_otp = random.randint(100000, 999999)
+                user.otp = new_otp
+                user.otp_generated_at = timezone.now()
+                user.save()
 
-            # Check if OTP matches
+                # Send the new OTP via email
+                send_mail(
+                    'OTP Verification',
+                    f'Your new OTP is {new_otp}',
+                    'praveencodeedex@gmail.com',
+                    [user.email]
+                )
+
+                raise serializers.ValidationError("OTP has expired. A new OTP has been sent to your email. Please try again.")
+
+            # If OTP is incorrect, regenerate and send a new OTP
             if user.otp != otp:
-                raise serializers.ValidationError("Invalid OTP.")
+                new_otp = random.randint(100000, 999999)  # Generate new OTP
+                user.otp = new_otp
+                user.otp_generated_at = timezone.now()  # Update the generation timestamp
+                user.save()
 
-            # Optionally, you could mark the OTP as used after verification (if needed)
+                # Send the new OTP via email
+                send_mail(
+                    'OTP Verification',
+                    f'Your new OTP is {new_otp}',
+                    'praveencodeedex@gmail.com',
+                    [user.email]
+                )
+
+                raise serializers.ValidationError("Invalid OTP. A new OTP has been sent to your email.")
+
+            # If OTP is correct, proceed with verification
             user.otp = None
             user.otp_generated_at = None
+            user.is_verified = True
+            user.is_active = True
             user.save()
 
         except User.DoesNotExist:
             raise serializers.ValidationError("No user is registered with this email.")
 
         return data
-
-
 
 class RequestOTPSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -156,7 +182,6 @@ class RequestOTPSerializer(serializers.Serializer):
 
         return value
 
-
 class VerifyOTPLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     otp = serializers.CharField(max_length=6)
@@ -168,9 +193,8 @@ class VerifyOTPLoginSerializer(serializers.Serializer):
         try:
             user = User.objects.get(email=email)
 
-            # Check if the OTP is expired
+            # Check if OTP is expired
             if user.is_otp_expired():
-                # Generate a new OTP
                 new_otp = random.randint(100000, 999999)
                 user.otp = new_otp
                 user.otp_generated_at = timezone.now()
@@ -180,24 +204,38 @@ class VerifyOTPLoginSerializer(serializers.Serializer):
                 send_mail(
                     'New OTP for Login',
                     f'Your new OTP is {new_otp}',
-                    'your-email@example.com',
+                    'praveencodeedex@gmail.com',
+                    [user.email],
+                )
+
+                raise serializers.ValidationError("OTP has expired. A new OTP has been sent to your email.")
+
+            # If OTP is incorrect, regenerate and send a new OTP
+            if user.otp != otp:
+                new_otp = random.randint(100000, 999999)  # Generate new OTP
+                user.otp = new_otp
+                user.otp_generated_at = timezone.now()  # Update the generation timestamp
+                user.save()
+
+                # Send the new OTP via email
+                send_mail(
+                    'New OTP for Login',
+                    f'Your new OTP is {new_otp}',
+                    'praveencodeedex@gmail.com',
                     [user.email],
                 )
 
                 raise serializers.ValidationError("Invalid OTP. A new OTP has been sent to your email.")
 
-            # Check if OTP matches
-            if user.otp != otp:
-                raise serializers.ValidationError("Invalid OTP.")
-
-            # If OTP matches, log the user in
-            if not user.is_active:
-                raise serializers.ValidationError("This account is not active. Please contact support.")
+            # If OTP is correct, proceed with login
+            user.otp = None  # Clear the OTP after successful login
+            user.save()
 
         except User.DoesNotExist:
             raise serializers.ValidationError("No user is registered with this email.")
 
         return data
+
 
 User = get_user_model()
 
