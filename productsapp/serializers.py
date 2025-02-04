@@ -165,5 +165,3 @@ class CartSerializer(serializers.ModelSerializer):
 
 
 
-
-
