@@ -408,3 +408,19 @@ class UpdateCartView(APIView):
         cart_item.delete()
         return Response({"message": "Cart item deleted successfully"}, status=status.HTTP_200_OK)
 
+
+class DeleteCartItemView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
+    def delete(self, request, cart_id):
+        """Handles deleting a product from the cart by cart item ID."""
+
+        # Get the cart item or return 404
+        cart_item = get_object_or_404(Cart, id=cart_id)
+
+        # Delete the cart item
+        cart_item.delete()
+
+        # Return a success response
+        return Response({"message": "Cart item deleted successfully"}, status=status.HTTP_200_OK)
