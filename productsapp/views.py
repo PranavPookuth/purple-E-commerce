@@ -339,14 +339,21 @@ class AddToCartView(APIView):
         serializer = CartSerializer(cart_item, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-class UpdateCartView(APIView):
+class UpdateCartItemView(APIView):
     permission_classes = []
     authentication_classes = []
 
-    def put(self, request, user_id, product_id):
+    def put(self, request, cart_id):
         """Handles updating the quantity of a product in the cart."""
-        user = get_object_or_404(User, pk=user_id)
-        product = get_object_or_404(Products, pk=product_id)
+        return self.update_cart_item(request, cart_id)
+
+    def patch(self, request, cart_id):
+        """Handles partial updates for the cart item."""
+        return self.update_cart_item(request, cart_id)
+
+    def update_cart_item(self, request, cart_id):
+        """Common logic for updating the cart item."""
+        cart_item = get_object_or_404(Cart, id=cart_id)
 
         quantity = request.data.get('quantity')
         if quantity is None:
@@ -359,54 +366,13 @@ class UpdateCartView(APIView):
         except ValueError:
             return Response({"error": "Quantity must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Fetch the cart item if it exists
-        cart_item = Cart.objects.filter(user=user, product=product).first()
-
-        if not cart_item:
-            return Response({"error": "Cart item not found"}, status=status.HTTP_404_NOT_FOUND)
-
+        # Update the cart item quantity and recalculate total price
         cart_item.quantity = quantity
-        cart_item.save()
-
-        serializer = CartSerializer(cart_item, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def patch(self, request, user_id, product_id):
-        """Handles partial updates for the cart item."""
-        user = get_object_or_404(User, pk=user_id)
-        product = get_object_or_404(Products, pk=product_id)
-
-        cart_item = Cart.objects.filter(user=user, product=product).first()
-
-        if not cart_item:
-            return Response({"error": "Cart item not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        quantity = request.data.get('quantity')
-        if quantity is not None:
-            try:
-                quantity = int(quantity)
-                if quantity <= 0:
-                    return Response({"error": "Quantity must be greater than zero"}, status=status.HTTP_400_BAD_REQUEST)
-                cart_item.quantity = quantity
-            except ValueError:
-                return Response({"error": "Quantity must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)
-
+        cart_item.total_price = cart_item.quantity * cart_item.product.price
         cart_item.save()
         serializer = CartSerializer(cart_item, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def delete(self, request, user_id, product_id):
-        """Handles deleting a product from the cart."""
-        user = get_object_or_404(User, pk=user_id)
-        product = get_object_or_404(Products, pk=product_id)
-
-        cart_item = Cart.objects.filter(user=user, product=product).first()
-
-        if not cart_item:
-            return Response({"error": "Cart item not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        cart_item.delete()
-        return Response({"message": "Cart item deleted successfully"}, status=status.HTTP_200_OK)
 
 
 class DeleteCartItemView(APIView):
@@ -424,3 +390,4 @@ class DeleteCartItemView(APIView):
 
         # Return a success response
         return Response({"message": "Cart item deleted successfully"}, status=status.HTTP_200_OK)
+b
