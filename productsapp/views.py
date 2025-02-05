@@ -390,4 +390,3 @@ class DeleteCartItemView(APIView):
 
         # Return a success response
         return Response({"message": "Cart item deleted successfully"}, status=status.HTTP_200_OK)
-b
