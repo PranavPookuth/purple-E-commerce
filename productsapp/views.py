@@ -389,4 +389,4 @@ class DeleteCartItemView(APIView):
         cart_item.delete()
 
         # Return a success response
-        return Response({"message": "Cart item deleted successfully"}, status=status.HTTP_200_OK)
+         dreturn Response({"message": "Cart item deleted successfully"}, status=status.HTTP_200_OK)
