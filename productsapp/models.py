@@ -1,11 +1,10 @@
-from email.policy import default
-from itertools import product
-
 from django.db import models
 from purple.models import Category
 from vendor.models import Vendors
 from purple.models import *
+
 # Create your models here.
+
 class Products(models.Model):
     vendor = models.ForeignKey(Vendors,related_name='products', on_delete=models.CASCADE)
     product_name = models.CharField(max_length=100)
