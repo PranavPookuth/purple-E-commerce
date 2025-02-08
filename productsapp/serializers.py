@@ -109,8 +109,6 @@ class BannerImageSerializer(serializers.ModelSerializer):
 
 
 
-from django.conf import settings
-
 class WishlistSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.product_name', read_only=True)
     price = serializers.DecimalField(source='product.offerprice', max_digits=10, decimal_places=2, read_only=True)
@@ -142,7 +140,6 @@ class ProductReviewSerializer(serializers.ModelSerializer):
         fields = ['id', 'product', 'product_name', 'user', 'rating', 'review', 'created_at']
         read_only_fields = ['id', 'created_at', 'user', 'product_name']
 
-
 class CartSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField(read_only=True)  # You must define get_user()
     product = ProductSerializer(read_only=True)
@@ -163,5 +160,48 @@ class CartSerializer(serializers.ModelSerializer):
         return price * obj.quantity if price else 0  # Fallback to 0 if price is None
 
 
+class CheckoutSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(required=True)  # Add user_name field
 
+    class Meta:
+        model = Order
+        fields = [
+            "id", "user_name", "payment_method", "product_ids", "product_names",
+            "quantities", "total_price", "total_cart_items",
+            "address", "city", "state", "pin_code", "status"
+        ]
 
+    def create(self, validated_data):
+        cart_items = Cart.objects.all()
+
+        if not cart_items.exists():
+            raise serializers.ValidationError(["Your cart is empty."])
+
+        product_ids = [str(item.product.id) for item in cart_items]
+        product_names = [item.product.product_name for item in cart_items]
+        quantities = [str(item.quantity) for item in cart_items]
+        total_price = sum(item.total_price() for item in cart_items)
+        total_cart_items = cart_items.count()
+
+        order = Order.objects.create(
+            user=None,  # No user required
+            payment_method=validated_data.get("payment_method"),
+            product_ids=",".join(product_ids),
+            product_names=",".join(product_names),
+            quantities=",".join(quantities),
+            total_price=total_price,
+            total_cart_items=total_cart_items,
+            address=validated_data.get("address"),
+            city=validated_data.get("city"),
+            state=validated_data.get("state"),
+            pin_code=validated_data.get("pin_code"),
+            status="WAITING FOR CONFIRMATION",
+        )
+
+        # Save user name separately (not in DB, just in response)
+        order.user_name = validated_data.get("user_name")
+
+        # Clear the cart after checkout
+        cart_items.delete()
+
+        return order

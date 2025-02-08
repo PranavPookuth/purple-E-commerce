@@ -98,4 +98,37 @@ class Cart(models.Model):
         return f"Cart item for {self.user.username} - {self.product.product_name}"
 
 
+class Order(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, null=True, blank=True  # Allow null users
+    )
+    payment_method = models.CharField(
+        max_length=100, choices=[('COD', 'Cash on Delivery'), ('Online', 'Online Payment')]
+    )
+    product_ids = models.CharField(max_length=255, null=True)
+    product_names = models.CharField(max_length=255, null=True)
+    total_price = models.FloatField(default=0.00)
+    status = models.CharField(
+        max_length=100, choices=[
+            ('WAITING FOR CONFIRMATION', 'Waiting for confirmation'),
+            ('CONFIRMED', 'Confirmed'),
+            ('OUT FOR DELIVERY', 'Out for delivery'),
+            ('DELIVERED', 'Delivered'),
+            ('REJECTED', 'Rejected')
+        ],
+        default='WAITING FOR CONFIRMATION'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    order_ids = models.CharField(max_length=100, null=True, blank=True)
+    total_cart_items = models.PositiveIntegerField(default=0)
+    quantities = models.TextField(null=True, blank=True)
+    delivery_pin = models.CharField(max_length=6, null=True, blank=True)
 
+    address = models.TextField(null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    state = models.CharField(max_length=100, null=True, blank=True)
+    pin_code = models.CharField(max_length=20, null=True, blank=True)
+
+    def __str__(self):
+        return f"Order by {self.user.email if self.user else 'Guest'} - Payment: {self.payment_method}"

@@ -390,3 +390,14 @@ class DeleteCartItemView(APIView):
 
         # Return a success response
         return Response({"message": "Cart item deleted successfully"}, status=status.HTTP_200_OK)
+
+
+class CheckoutView(generics.CreateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = CheckoutSerializer
+    permission_classes = []  # Allow anonymous users
+    authentication_classes = []
+
+    def post(self, request, *args, **kwargs):
+        print("Checkout Request Data:", request.data)  # Debugging
+        return super().post(request, *args, **kwargs)
