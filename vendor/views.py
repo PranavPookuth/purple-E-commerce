@@ -14,7 +14,6 @@ from purple.serializers import CategorySerializer
 
 
 # Create your views here.
-
 class VendorListViews(generics.ListCreateAPIView):
     permission_classes = []
     authentication_classes = []
