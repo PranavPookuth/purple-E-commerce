@@ -251,4 +251,3 @@ class OrderSerializer(serializers.ModelSerializer):
         cart_items.delete()
 
         return order
-
