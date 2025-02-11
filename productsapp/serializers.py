@@ -205,3 +205,50 @@ class CheckoutSerializer(serializers.ModelSerializer):
         cart_items.delete()
 
         return order
+
+class OrderSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(required=True)  # Track user by name
+
+    class Meta:
+        model = Order
+        fields = [
+            "id", "user_name", "payment_method", "product_ids", "product_names",
+            "quantities", "total_price", "total_cart_items",
+            "address", "city", "state", "pin_code", "status"
+        ]
+
+    def create(self, validated_data):
+        """Create an order from cart items."""
+        cart_items = Cart.objects.all()
+
+        if not cart_items.exists():
+            raise serializers.ValidationError(["Your cart is empty."])
+
+        # Extract order details from the cart
+        product_ids = [str(item.product.id) for item in cart_items]
+        product_names = [item.product.product_name for item in cart_items]
+        quantities = [str(item.quantity) for item in cart_items]
+        total_price = sum(item.total_price() for item in cart_items)
+        total_cart_items = cart_items.count()
+
+        # Create the order
+        order = Order.objects.create(
+            user=None,  # No authentication required
+            payment_method=validated_data.get("payment_method"),
+            product_ids=",".join(product_ids),
+            product_names=",".join(product_names),
+            quantities=",".join(quantities),
+            total_price=total_price,
+            total_cart_items=total_cart_items,
+            address=validated_data.get("address"),
+            city=validated_data.get("city"),
+            state=validated_data.get("state"),
+            pin_code=validated_data.get("pin_code"),
+            status="WAITING FOR CONFIRMATION",
+        )
+
+        # Clear the cart after checkout
+        cart_items.delete()
+
+        return order
+

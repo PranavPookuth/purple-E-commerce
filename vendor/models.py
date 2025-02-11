@@ -5,7 +5,6 @@ from rest_framework.permissions import BasePermission
 import random
 import uuid
 
-
 # Create your models here.
 class Vendors(models.Model):
     name = models.CharField(max_length=225,unique=True)
