@@ -402,4 +402,3 @@ class CheckoutView(generics.CreateAPIView):
         print("Checkout Request Data:", request.data)  # Debugging
         return super().post(request, *args, **kwargs)
 
-
