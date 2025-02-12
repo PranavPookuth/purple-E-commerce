@@ -374,6 +374,7 @@ class UpdateCartItemView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+
 class DeleteCartItemView(APIView):
     permission_classes = []
     authentication_classes = []
