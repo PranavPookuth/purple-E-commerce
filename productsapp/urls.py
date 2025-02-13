@@ -37,6 +37,8 @@ urlpatterns = [
 
     path('checkout/', CheckoutView.as_view(), name='checkout'),
 
+    path("order/", OrderListCreateView.as_view(), name="order"),
+
 
 
 

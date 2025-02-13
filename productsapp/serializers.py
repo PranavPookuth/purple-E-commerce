@@ -1,3 +1,6 @@
+import random
+import uuid
+import pytz
 from django.conf import settings
 from rest_framework import serializers
 from  .models import *
@@ -160,20 +163,25 @@ class CartSerializer(serializers.ModelSerializer):
         return price * obj.quantity if price else 0  # Fallback to 0 if price is None
 
 
+
 class CheckoutSerializer(serializers.ModelSerializer):
-    user_name = serializers.CharField(required=True)  # Add user_name field
+    user_name = serializers.CharField(write_only=True, required=False)  # Accept user_name from request
 
     class Meta:
         model = Order
         fields = [
-            "id", "user_name", "payment_method", "product_ids", "product_names",
-            "quantities", "total_price", "total_cart_items",
-            "address", "city", "state", "pin_code", "status"
+            "id", "user_name", "payment_method", "product_ids", "product_names", "quantities",
+            "total_price", "total_cart_items", "address", "city", "state",
+            "pin_code", "status", "order_ids"
         ]
 
     def create(self, validated_data):
-        cart_items = Cart.objects.all()
+        request = self.context.get('request')
+        user = request.user if request and request.user.is_authenticated else None
+        user_name = validated_data.pop("user_name", None)  # Remove user_name before saving
 
+        # Fetch cart items for the user
+        cart_items = Cart.objects.filter(user=user) if user else Cart.objects.all()
         if not cart_items.exists():
             raise serializers.ValidationError(["Your cart is empty."])
 
@@ -183,8 +191,11 @@ class CheckoutSerializer(serializers.ModelSerializer):
         total_price = sum(item.total_price() for item in cart_items)
         total_cart_items = cart_items.count()
 
+        unique_order_id = str(uuid.uuid4())[:8]  # Generate unique order ID
+
+        # Create Order
         order = Order.objects.create(
-            user=None,  # No user required
+            user=user,
             payment_method=validated_data.get("payment_method"),
             product_ids=",".join(product_ids),
             product_names=",".join(product_names),
@@ -196,58 +207,71 @@ class CheckoutSerializer(serializers.ModelSerializer):
             state=validated_data.get("state"),
             pin_code=validated_data.get("pin_code"),
             status="WAITING FOR CONFIRMATION",
+            order_ids=unique_order_id
         )
-
-        # Save user name separately (not in DB, just in response)
-        order.user_name = validated_data.get("user_name")
-
-        # Clear the cart after checkout
-        cart_items.delete()
 
         return order
 
-class OrderSerializer(serializers.ModelSerializer):
-    user_name = serializers.CharField(required=True)  # Track user by name
 
+class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            "id", "user_name", "payment_method", "product_ids", "product_names",
-            "quantities", "total_price", "total_cart_items",
-            "address", "city", "state", "pin_code", "status"
+            "id", "user", "payment_method", "product_ids", "product_names", "quantities",
+            "total_price", "total_cart_items", "address", "city", "state",
+            "pin_code", "delivery_pin", "status", "order_ids", "created_at", "updated_at"
         ]
+        read_only_fields = ["id", "created_at", "updated_at", "order_ids", "delivery_pin"]
 
     def create(self, validated_data):
-        """Create an order from cart items."""
-        cart_items = Cart.objects.all()
+        request = self.context.get('request')
+        user = request.user if request and request.user.is_authenticated else None
+
+        # Fetch cart items
+        cart_items = Cart.objects.filter(user=user) if user else Cart.objects.all()
 
         if not cart_items.exists():
-            raise serializers.ValidationError(["Your cart is empty."])
+            raise serializers.ValidationError({"detail": "Your cart is empty."})
 
-        # Extract order details from the cart
+        # Calculate order details from cart
         product_ids = [str(item.product.id) for item in cart_items]
         product_names = [item.product.product_name for item in cart_items]
         quantities = [str(item.quantity) for item in cart_items]
         total_price = sum(item.total_price() for item in cart_items)
         total_cart_items = cart_items.count()
 
+        # Ensure total_price is never null
+        if total_price is None:
+            raise serializers.ValidationError({"total_price": "Total price cannot be null."})
+
+        # Generate a unique order ID
+        unique_order_id = str(uuid.uuid4())[:8]
+
+        # Auto-generate a random 6-digit delivery pin
+        delivery_pin = str(random.randint(100000, 999999))
+
+        # Fetch user profile details if available, otherwise set default values
+        address = validated_data.get("address") or (user.profile.address if user and hasattr(user, 'profile') else "No Address Available")
+        city = validated_data.get("city") or (user.profile.city if user and hasattr(user, 'profile') else "No City Available")
+        state = validated_data.get("state") or (user.profile.state if user and hasattr(user, 'profile') else "No State Available")
+        pin_code = validated_data.get("pin_code") or (user.profile.pin_code if user and hasattr(user, 'profile') else "000000")
+
         # Create the order
         order = Order.objects.create(
-            user=None,  # No authentication required
+            user=user,
             payment_method=validated_data.get("payment_method"),
             product_ids=",".join(product_ids),
             product_names=",".join(product_names),
             quantities=",".join(quantities),
             total_price=total_price,
             total_cart_items=total_cart_items,
-            address=validated_data.get("address"),
-            city=validated_data.get("city"),
-            state=validated_data.get("state"),
-            pin_code=validated_data.get("pin_code"),
+            address=address,
+            city=city,
+            state=state,
+            pin_code=pin_code,
+            delivery_pin=delivery_pin,
             status="WAITING FOR CONFIRMATION",
+            order_ids=unique_order_id
         )
-
-        # Clear the cart after checkout
-        cart_items.delete()
 
         return order
