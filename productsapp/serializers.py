@@ -214,64 +214,18 @@ class CheckoutSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(source='user.email', read_only=True)
+
     class Meta:
         model = Order
         fields = [
-            "id", "user", "payment_method", "product_ids", "product_names", "quantities",
+            "id", "user_email", "payment_method", "product_ids", "product_names", "quantities",
             "total_price", "total_cart_items", "address", "city", "state",
-            "pin_code", "delivery_pin", "status", "order_ids", "created_at", "updated_at"
+            "pin_code", "status", "order_ids", "delivery_pin", "created_at", "updated_at"
         ]
-        read_only_fields = ["id", "created_at", "updated_at", "order_ids", "delivery_pin"]
+        read_only_fields = ["id", "user_email", "order_ids", "delivery_pin", "created_at", "updated_at"]
 
     def create(self, validated_data):
-        request = self.context.get('request')
-        user = request.user if request and request.user.is_authenticated else None
-
-        # Fetch cart items
-        cart_items = Cart.objects.filter(user=user) if user else Cart.objects.all()
-
-        if not cart_items.exists():
-            raise serializers.ValidationError({"detail": "Your cart is empty."})
-
-        # Calculate order details from cart
-        product_ids = [str(item.product.id) for item in cart_items]
-        product_names = [item.product.product_name for item in cart_items]
-        quantities = [str(item.quantity) for item in cart_items]
-        total_price = sum(item.total_price() for item in cart_items)
-        total_cart_items = cart_items.count()
-
-        # Ensure total_price is never null
-        if total_price is None:
-            raise serializers.ValidationError({"total_price": "Total price cannot be null."})
-
-        # Generate a unique order ID
-        unique_order_id = str(uuid.uuid4())[:8]
-
-        # Auto-generate a random 6-digit delivery pin
-        delivery_pin = str(random.randint(100000, 999999))
-
-        # Fetch user profile details if available, otherwise set default values
-        address = validated_data.get("address") or (user.profile.address if user and hasattr(user, 'profile') else "No Address Available")
-        city = validated_data.get("city") or (user.profile.city if user and hasattr(user, 'profile') else "No City Available")
-        state = validated_data.get("state") or (user.profile.state if user and hasattr(user, 'profile') else "No State Available")
-        pin_code = validated_data.get("pin_code") or (user.profile.pin_code if user and hasattr(user, 'profile') else "000000")
-
-        # Create the order
-        order = Order.objects.create(
-            user=user,
-            payment_method=validated_data.get("payment_method"),
-            product_ids=",".join(product_ids),
-            product_names=",".join(product_names),
-            quantities=",".join(quantities),
-            total_price=total_price,
-            total_cart_items=total_cart_items,
-            address=address,
-            city=city,
-            state=state,
-            pin_code=pin_code,
-            delivery_pin=delivery_pin,
-            status="WAITING FOR CONFIRMATION",
-            order_ids=unique_order_id
-        )
-
-        return order
+        # Generate a random 6-digit delivery PIN
+        validated_data["delivery_pin"] = str(random.randint(100000, 999999))
+        return super().create(validated_data)

@@ -99,7 +99,7 @@ class Cart(models.Model):
 
 class Order(models.Model):
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE)
+        User, on_delete=models.CASCADE,null=True, blank=True)
     payment_method = models.CharField(
         max_length=100, choices=[('COD', 'Cash on Delivery'), ('Online', 'Online Payment')]
     )
