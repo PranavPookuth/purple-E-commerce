@@ -99,8 +99,7 @@ class Cart(models.Model):
 
 class Order(models.Model):
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, null=True, blank=True  # Allow null users
-    )
+        User, on_delete=models.CASCADE)
     payment_method = models.CharField(
         max_length=100, choices=[('COD', 'Cash on Delivery'), ('Online', 'Online Payment')]
     )
@@ -130,4 +129,4 @@ class Order(models.Model):
     pin_code = models.CharField(max_length=20, null=True, blank=True)
 
     def __str__(self):
-        return f"Order by {self.user.email if self.user else 'Guest'} - Payment: {self.payment_method}"
+        return f"Order by {self.user.email } - Payment: {self.payment_method}"

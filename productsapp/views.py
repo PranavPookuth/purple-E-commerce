@@ -1,6 +1,7 @@
 from django.db.models import Sum
 from django.shortcuts import render, get_object_or_404
 from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from purple.serializers import CategorySerializer
@@ -402,3 +403,12 @@ class CheckoutView(generics.CreateAPIView):
         print("Checkout Request Data:", request.data)  # Debugging
         return super().post(request, *args, **kwargs)
 
+
+class OrderListCreateView(generics.ListCreateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = []
+    authentication_classes = []
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user)
