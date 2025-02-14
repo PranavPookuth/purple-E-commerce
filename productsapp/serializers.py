@@ -9,17 +9,18 @@ from purple.models import *
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
+    product_image = serializers.SerializerMethodField()
+
     class Meta:
         model = ProductImage
         fields = ['id', 'product', 'product_image']
 
-    def get_images(self, obj):
+    def get_product_image(self, obj):
         request = self.context.get('request')
-        images = ProductImage.objects.filter(product=obj)
-        return [
-            request.build_absolute_uri(image.product_image.url) if request else image.product_image.url
-            for image in images
-        ]
+        if obj.product_image:
+            return request.build_absolute_uri(obj.product_image.url) if request else f"{settings.MEDIA_URL}{obj.product_image.url}"
+        return None
+
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -209,23 +210,46 @@ class CheckoutSerializer(serializers.ModelSerializer):
             status="WAITING FOR CONFIRMATION",
             order_ids=unique_order_id
         )
-
+        cart_items.delete()
         return order
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    user_email = serializers.EmailField(source='user.email', read_only=True)
-
     class Meta:
         model = Order
         fields = [
-            "id", "user_email", "payment_method", "product_ids", "product_names", "quantities",
+            "id", "payment_method", "product_ids", "product_names", "quantities",
             "total_price", "total_cart_items", "address", "city", "state",
             "pin_code", "status", "order_ids", "delivery_pin", "created_at", "updated_at"
         ]
-        read_only_fields = ["id", "user_email", "order_ids", "delivery_pin", "created_at", "updated_at"]
+        read_only_fields = ["id", "order_ids", "delivery_pin", "created_at", "updated_at"]
 
     def create(self, validated_data):
-        # Generate a random 6-digit delivery PIN
+        # Fetch all cart items (without authentication)
+        cart_items = Cart.objects.all()
+        if not cart_items.exists():
+            raise serializers.ValidationError({"cart": "Your cart is empty."})
+
+        # Extract product details
+        product_ids = [str(item.product.id) for item in cart_items]
+        product_names = [item.product.product_name for item in cart_items]
+        quantities = [str(item.quantity) for item in cart_items]
+        total_price = sum(item.total_price() for item in cart_items)
+        total_cart_items = cart_items.count()
+
+        # Generate unique order ID and delivery PIN
+        validated_data["order_ids"] = str(uuid.uuid4())[:8]
         validated_data["delivery_pin"] = str(random.randint(100000, 999999))
-        return super().create(validated_data)
+
+        # Assign cart data
+        validated_data["product_ids"] = ",".join(product_ids)
+        validated_data["product_names"] = ",".join(product_names)
+        validated_data["quantities"] = ",".join(quantities)
+        validated_data["total_price"] = total_price
+        validated_data["total_cart_items"] = total_cart_items
+
+        # Create the order
+        order = super().create(validated_data)
+
+
+        return order

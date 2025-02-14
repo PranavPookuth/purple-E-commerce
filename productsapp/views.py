@@ -47,15 +47,16 @@ class SingleProductView(APIView):
 class VendorProductListView(APIView):
     permission_classes = []
 
-    def get(self,request,vendor_id):
+    def get(self, request, vendor_id):
         try:
             vendor = Vendors.objects.get(id=vendor_id)
         except Vendors.DoesNotExist:
-            return Response({'detail':'Vendor Not Found'},status=status.HTTP_404_NOT_FOUND)
+            return Response({'detail': 'Vendor Not Found'}, status=status.HTTP_404_NOT_FOUND)
 
-        products=Products.objects.filter(vendor=vendor)
-        serializer = ProductCreateSerializer(products,many=True)
-        return Response(serializer.data,status=status.HTTP_200_OK)
+        products = Products.objects.filter(vendor=vendor)
+        serializer = ProductCreateSerializer(products, many=True, context={'request': request})  # Pass request context
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 class VendorCategoryListView(APIView):
@@ -402,6 +403,21 @@ class CheckoutView(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         print("Checkout Request Data:", request.data)  # Debugging
         return super().post(request, *args, **kwargs)
+
+class OrderListView(generics.ListAPIView):
+    serializer_class = CheckoutSerializer
+
+    def get_queryset(self):
+        queryset = Order.objects.all()
+        user_id = self.request.query_params.get('user_id')
+        order_id = self.request.query_params.get('order_id')
+
+        if user_id:
+            queryset = queryset.filter(user__id=user_id)
+        if order_id:
+            queryset = queryset.filter(order_ids=order_id)
+
+        return queryset
 
 
 class OrderListCreateView(generics.ListCreateAPIView):
