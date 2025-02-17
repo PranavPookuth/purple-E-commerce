@@ -1,5 +1,3 @@
-from tkinter.font import names
-
 from django.urls import path
 from . views import *
 
@@ -36,9 +34,10 @@ urlpatterns = [
     path('product/review/delete/<int:review_id>/', ProductReviewDeleteView.as_view(), name='delete-product-review'),
 
     path('checkout/', CheckoutView.as_view(), name='checkout'),
-    path('order/user/<int:user_id>/', OrderListView.as_view(), name='user-orders'),
+    path('orders/user/<int:user_id>/', OrderListView.as_view(), name='order-list-by-user'),
 
-    path("order/", OrderListCreateView.as_view(), name="order"),
+
+
 
 
 
