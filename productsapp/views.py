@@ -1,6 +1,7 @@
 from django.db.models import Sum
 from django.shortcuts import render, get_object_or_404
 from rest_framework import generics, status
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -404,27 +405,10 @@ class CheckoutView(generics.CreateAPIView):
         print("Checkout Request Data:", request.data)  # Debugging
         return super().post(request, *args, **kwargs)
 
+
 class OrderListView(generics.ListAPIView):
-    serializer_class = CheckoutSerializer
-
-    def get_queryset(self):
-        queryset = Order.objects.all()
-        user_id = self.request.query_params.get('user_id')
-        order_id = self.request.query_params.get('order_id')
-
-        if user_id:
-            queryset = queryset.filter(user__id=user_id)
-        if order_id:
-            queryset = queryset.filter(order_ids=order_id)
-
-        return queryset
-
-
-class OrderListCreateView(generics.ListCreateAPIView):
-    queryset = Order.objects.all()
     serializer_class = OrderSerializer
-    permission_classes = []
-    authentication_classes = []
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+        user_id = self.kwargs['user_id']
+        return Order.objects.filter(user_id=user_id).order_by('-created_at')

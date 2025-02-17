@@ -178,11 +178,21 @@ class CheckoutSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context.get('request')
-        user = request.user if request and request.user.is_authenticated else None
-        user_name = validated_data.pop("user_name", None)  # Remove user_name before saving
+
+        # Check if the user_name is provided in the request
+        user_name = validated_data.pop("user_name", None)
+
+        if not user_name:
+            raise serializers.ValidationError("User name is required.")
+
+        try:
+            # Instead of name, use 'username' if you're storing user names in the 'username' field.
+            user = User.objects.get(username=user_name)  # Retrieve user by username
+        except User.DoesNotExist:
+            raise serializers.ValidationError("User not found.")
 
         # Fetch cart items for the user
-        cart_items = Cart.objects.filter(user=user) if user else Cart.objects.all()
+        cart_items = Cart.objects.filter(user=user)
         if not cart_items.exists():
             raise serializers.ValidationError(["Your cart is empty."])
 
@@ -194,7 +204,7 @@ class CheckoutSerializer(serializers.ModelSerializer):
 
         unique_order_id = str(uuid.uuid4())[:8]  # Generate unique order ID
 
-        # Create Order
+        # Create the order
         order = Order.objects.create(
             user=user,
             payment_method=validated_data.get("payment_method"),
@@ -210,46 +220,25 @@ class CheckoutSerializer(serializers.ModelSerializer):
             status="WAITING FOR CONFIRMATION",
             order_ids=unique_order_id
         )
-        cart_items.delete()
+
         return order
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    # Use the 'username' field from the related User object.
+    user_name = serializers.CharField(source='user.username', read_only=True)
+    order_time = serializers.SerializerMethodField()
+    cart_products = CartSerializer(source='cart.products', many=True, read_only=True)
+
     class Meta:
         model = Order
-        fields = [
-            "id", "payment_method", "product_ids", "product_names", "quantities",
-            "total_price", "total_cart_items", "address", "city", "state",
-            "pin_code", "status", "order_ids", "delivery_pin", "created_at", "updated_at"
-        ]
-        read_only_fields = ["id", "order_ids", "delivery_pin", "created_at", "updated_at"]
+        fields = ['id', 'user', 'user_name', 'status', 'created_at', 'product_names', 'payment_method', 'product_ids',
+                  'total_price', 'order_ids', 'cart_products', 'total_cart_items', 'order_time']
 
-    def create(self, validated_data):
-        # Fetch all cart items (without authentication)
-        cart_items = Cart.objects.all()
-        if not cart_items.exists():
-            raise serializers.ValidationError({"cart": "Your cart is empty."})
+    def get_order_time(self, obj):
+        # Convert to IST (Indian Standard Time)
+        ist_timezone = pytz.timezone('Asia/Kolkata')
+        created_at_ist = obj.created_at.astimezone(ist_timezone)
 
-        # Extract product details
-        product_ids = [str(item.product.id) for item in cart_items]
-        product_names = [item.product.product_name for item in cart_items]
-        quantities = [str(item.quantity) for item in cart_items]
-        total_price = sum(item.total_price() for item in cart_items)
-        total_cart_items = cart_items.count()
-
-        # Generate unique order ID and delivery PIN
-        validated_data["order_ids"] = str(uuid.uuid4())[:8]
-        validated_data["delivery_pin"] = str(random.randint(100000, 999999))
-
-        # Assign cart data
-        validated_data["product_ids"] = ",".join(product_ids)
-        validated_data["product_names"] = ",".join(product_names)
-        validated_data["quantities"] = ",".join(quantities)
-        validated_data["total_price"] = total_price
-        validated_data["total_cart_items"] = total_cart_items
-
-        # Create the order
-        order = super().create(validated_data)
-
-
-        return order
+        # Format the datetime in the desired format
+        return created_at_ist.strftime("%d/%m/%Y at %I:%M%p")
