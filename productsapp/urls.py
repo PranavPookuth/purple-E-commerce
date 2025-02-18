@@ -35,6 +35,10 @@ urlpatterns = [
 
     path('checkout/', CheckoutView.as_view(), name='checkout'),
     path('orders/user/<int:user_id>/', OrderListView.as_view(), name='order-list-by-user'),
+    path('orders/user/<int:user_id>/<str:order_ids>/', OrderDetailView.as_view(), name='order-detail'),
+    path('orders/', AllOrdersListView.as_view(), name='all-orders-list'),
+    path('orders/<int:pk>/', AllOrderDetailView.as_view(), name='order-detail'),
+
 
 
 
