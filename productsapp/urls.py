@@ -39,6 +39,9 @@ urlpatterns = [
     path('orders/', AllOrdersListView.as_view(), name='all-orders-list'),
     path('orders/<int:pk>/', AllOrderDetailView.as_view(), name='order-detail'),
 
+    path('orders/<int:order_id>/update-status/', UpdateOrderStatusView.as_view(), name='update-order-status'),
+
+
 
 
 
