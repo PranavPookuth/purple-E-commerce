@@ -306,3 +306,12 @@ class AllOrdersSerializer(serializers.ModelSerializer):
 
         # Format the datetime in the desired format
         return created_at_ist.strftime("%d/%m/%Y at %I:%M%p")
+
+class UpdateOrderStatusSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=[
+        ('WAITING FOR CONFIRMATION', 'Waiting for confirmation'),
+        ('CONFIRMED', 'Confirmed'),
+        ('OUT FOR DELIVERY', 'Out for delivery'),
+        ('DELIVERED', 'Delivered'),
+        ('REJECTED','rejected')
+    ])

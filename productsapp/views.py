@@ -470,3 +470,25 @@ class AllOrderDetailView(generics.RetrieveUpdateDestroyAPIView):
         Override perform_destroy to delete the object.
         """
         instance.delete()
+
+class UpdateOrderStatusView(APIView):
+    permission_classes = []  # No authentication required
+    authentication_classes = []
+
+    def patch(self, request, order_id):
+        print(f"Received Order ID: {order_id}")  # Debugging log
+        order = get_object_or_404(Order, id=order_id)
+        print(f"Order Found: {order}")  # Debugging log
+
+        serializer = UpdateOrderStatusSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # Update order status
+        order.status = serializer.validated_data['status']
+        order.save()
+
+        return Response({
+            "message": "Order status updated successfully",
+            "order_id": order.order_ids,  # Assuming `order_ids` is a field in your model
+            "new_status": order.status
+        }, status=status.HTTP_200_OK)
