@@ -109,14 +109,13 @@ class OTPVerifySerializer(serializers.ModelSerializer):
         try:
             user = User.objects.get(email=email)
 
-            # Check if OTP is expired
+            # ✅ Only regenerate OTP if it's expired
             if user.is_otp_expired():
                 new_otp = random.randint(100000, 999999)
                 user.otp = new_otp
                 user.otp_generated_at = timezone.now()
                 user.save()
 
-                # Send the new OTP via email
                 send_mail(
                     'OTP Verification',
                     f'Your new OTP is {new_otp}',
@@ -124,26 +123,13 @@ class OTPVerifySerializer(serializers.ModelSerializer):
                     [user.email]
                 )
 
-                raise serializers.ValidationError("OTP has expired. A new OTP has been sent to your email. Please try again.")
+                raise serializers.ValidationError("OTP expired. A new OTP has been sent to your email.")
 
-            # If OTP is incorrect, regenerate and send a new OTP
+            # ❌ Do NOT regenerate OTP if it's incorrect
             if user.otp != otp:
-                new_otp = random.randint(100000, 999999)  # Generate new OTP
-                user.otp = new_otp
-                user.otp_generated_at = timezone.now()  # Update the generation timestamp
-                user.save()
+                raise serializers.ValidationError("Invalid OTP. Please enter the correct OTP.")
 
-                # Send the new OTP via email
-                send_mail(
-                    'OTP Verification',
-                    f'Your new OTP is {new_otp}',
-                    'praveencodeedex@gmail.com',
-                    [user.email]
-                )
-
-                raise serializers.ValidationError("Invalid OTP. A new OTP has been sent to your email.")
-
-            # If OTP is correct, proceed with verification
+            # ✅ If OTP is correct, verify the user
             user.otp = None
             user.otp_generated_at = None
             user.is_verified = True
@@ -154,6 +140,7 @@ class OTPVerifySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("No user is registered with this email.")
 
         return data
+
 
 class RequestOTPSerializer(serializers.Serializer):
     email = serializers.EmailField()

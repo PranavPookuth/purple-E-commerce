@@ -409,7 +409,64 @@ class CheckoutView(generics.CreateAPIView):
 class OrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer
 
-
     def get_queryset(self):
         user_id = self.kwargs['user_id']
         return Order.objects.filter(user_id=user_id).order_by('-created_at')
+
+
+class OrderDetailView(APIView):
+    def get(self, request, user_id, order_ids):
+        user = get_object_or_404(User, id=user_id)
+        order = get_object_or_404(Order, user=user, order_ids=order_ids)
+        serializer = OrderDetailSerializer(order)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class AllOrdersListView(APIView):
+    permission_classes = []
+
+    def get(self, request, format=None):
+        orders = Order.objects.all()  # Retrieve all orders, or filter as needed
+        serializer = AllOrdersSerializer(orders, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class AllOrderDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Order.objects.all()
+    serializer_class = AllOrdersSerializer
+    permission_classes = []  # You can customize this permission
+    authentication_classes = []
+    lookup_field = 'pk'  # Default is 'pk', you can use other field if needed
+
+    def get_object(self):
+        """
+        Override get_object to customize how we retrieve the object.
+        """
+        order_id = self.kwargs.get(self.lookup_field)
+        return generics.get_object_or_404(Order, id=order_id)
+
+    # Handle retrieving an order
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    # Handle updating an order
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)  # If the request is partial update
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+    # Handle deleting an order
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        """
+        Override perform_destroy to delete the object.
+        """
+        instance.delete()

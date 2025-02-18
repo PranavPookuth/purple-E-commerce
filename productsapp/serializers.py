@@ -173,7 +173,7 @@ class CheckoutSerializer(serializers.ModelSerializer):
         fields = [
             "id", "user_name", "payment_method", "product_ids", "product_names", "quantities",
             "total_price", "total_cart_items", "address", "city", "state",
-            "pin_code", "status", "order_ids"
+            "pin_code", "status", "order_ids", "delivery_pin"  # Ensure delivery_pin is included
         ]
 
     def create(self, validated_data):
@@ -186,7 +186,6 @@ class CheckoutSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("User name is required.")
 
         try:
-            # Instead of name, use 'username' if you're storing user names in the 'username' field.
             user = User.objects.get(username=user_name)  # Retrieve user by username
         except User.DoesNotExist:
             raise serializers.ValidationError("User not found.")
@@ -204,7 +203,7 @@ class CheckoutSerializer(serializers.ModelSerializer):
 
         unique_order_id = str(uuid.uuid4())[:8]  # Generate unique order ID
 
-        # Create the order
+        # Create the order, ensuring delivery_pin is stored
         order = Order.objects.create(
             user=user,
             payment_method=validated_data.get("payment_method"),
@@ -217,11 +216,17 @@ class CheckoutSerializer(serializers.ModelSerializer):
             city=validated_data.get("city"),
             state=validated_data.get("state"),
             pin_code=validated_data.get("pin_code"),
-            status="WAITING FOR CONFIRMATION",
+            delivery_pin=validated_data.get("pin_code"),  # Store pin_code in delivery_pin
+            status="CONFIRMED ",
             order_ids=unique_order_id
         )
 
+        # Clear the user's cart after checkout
+        cart_items.delete()
+
         return order
+
+
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -234,6 +239,65 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = ['id', 'user', 'user_name', 'status', 'created_at', 'product_names', 'payment_method', 'product_ids',
                   'total_price', 'order_ids', 'cart_products', 'total_cart_items', 'order_time']
+
+    def get_order_time(self, obj):
+        # Convert to IST (Indian Standard Time)
+        ist_timezone = pytz.timezone('Asia/Kolkata')
+        created_at_ist = obj.created_at.astimezone(ist_timezone)
+
+        # Format the datetime in the desired format
+        return created_at_ist.strftime("%d/%m/%Y at %I:%M%p")
+
+class OrderDetailSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.username', read_only=True)
+    Address = serializers.CharField(source='user.address', read_only=True)
+    total_price = serializers.ReadOnlyField()
+    cart_products = serializers.SerializerMethodField()
+    order_time = serializers.SerializerMethodField()
+    delivery_pin = serializers.CharField(read_only=True)  # Ensure it's included
+
+    class Meta:
+        model = Order
+        fields = [
+            'id', 'user', 'user_name', 'status', 'created_at',
+            'product_names', 'payment_method', 'product_ids',
+            'total_price', 'order_ids', 'cart_products', 'Address',
+            'total_cart_items', 'order_time', 'delivery_pin'  # Ensure it's in response
+        ]
+
+    def get_order_time(self, obj):
+        return obj.created_at.strftime("%d/%m/%Y at %I:%M%p")
+
+    def get_cart_products(self, obj):
+        product_ids = obj.product_ids.split(",") if obj.product_ids else []
+        product_names = obj.product_names.split(",") if obj.product_names else []
+        quantities = obj.quantities.split(",") if obj.quantities else []
+
+        products = Products.objects.filter(id__in=product_ids)
+
+        cart_products = []
+        for product in products:
+            index = product_ids.index(str(product.id))
+            quantity = int(quantities[index]) if len(quantities) > index else 1
+
+            cart_products.append({
+                "name": product_names[index],
+                "quantity": quantity,
+                "price": str(product.price)
+            })
+
+        return cart_products
+
+
+class AllOrdersSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.name', read_only=True)
+    cart_products = CartSerializer(source='cart.products', many=True, read_only=True)
+    order_time = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = ['id', 'user', 'user_name', 'status', 'payment_method', 'order_ids',
+                  'delivery_pin', 'cart_products', 'order_time']
 
     def get_order_time(self, obj):
         # Convert to IST (Indian Standard Time)
