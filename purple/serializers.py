@@ -109,7 +109,7 @@ class OTPVerifySerializer(serializers.ModelSerializer):
         try:
             user = User.objects.get(email=email)
 
-            # ✅ Only regenerate OTP if it's expired
+            #  Only regenerate OTP if it's expired
             if user.is_otp_expired():
                 new_otp = random.randint(100000, 999999)
                 user.otp = new_otp
@@ -125,11 +125,11 @@ class OTPVerifySerializer(serializers.ModelSerializer):
 
                 raise serializers.ValidationError("OTP expired. A new OTP has been sent to your email.")
 
-            # ❌ Do NOT regenerate OTP if it's incorrect
+            # Do NOT regenerate OTP if it's incorrect
             if user.otp != otp:
                 raise serializers.ValidationError("Invalid OTP. Please enter the correct OTP.")
 
-            # ✅ If OTP is correct, verify the user
+            # If OTP is correct, verify the user
             user.otp = None
             user.otp_generated_at = None
             user.is_verified = True
@@ -140,6 +140,7 @@ class OTPVerifySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("No user is registered with this email.")
 
         return data
+
 
 
 class RequestOTPSerializer(serializers.Serializer):

@@ -492,3 +492,21 @@ class UpdateOrderStatusView(APIView):
             "order_id": order.order_ids,  # Assuming `order_ids` is a field in your model
             "new_status": order.status
         }, status=status.HTTP_200_OK)
+
+class UserOrdersListView(generics.ListAPIView):
+    serializer_class = OrderDetailSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        user = get_object_or_404(User, id=user_id)
+        return Order.objects.filter(user=user).order_by('-created_at')
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        total_orders = queryset.count()
+        serializer = self.get_serializer(queryset, many=True)
+
+        return Response({
+            'total_orders': total_orders,
+            'orders': serializer.data
+        })
