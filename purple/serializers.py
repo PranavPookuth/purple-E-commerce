@@ -109,21 +109,9 @@ class OTPVerifySerializer(serializers.ModelSerializer):
         try:
             user = User.objects.get(email=email)
 
-            #  Only regenerate OTP if it's expired
+            # Check if OTP is expired
             if user.is_otp_expired():
-                new_otp = random.randint(100000, 999999)
-                user.otp = new_otp
-                user.otp_generated_at = timezone.now()
-                user.save()
-
-                send_mail(
-                    'OTP Verification',
-                    f'Your new OTP is {new_otp}',
-                    'praveencodeedex@gmail.com',
-                    [user.email]
-                )
-
-                raise serializers.ValidationError("OTP expired. A new OTP has been sent to your email.")
+                raise serializers.ValidationError("OTP has expired. Please request a new OTP.")
 
             # Do NOT regenerate OTP if it's incorrect
             if user.otp != otp:
