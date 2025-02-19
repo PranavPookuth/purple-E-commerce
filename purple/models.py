@@ -1,7 +1,9 @@
+from datetime import timedelta
 from random import randint
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.utils import timezone
+from django.utils.timezone import now
 
 
 class UserManager(BaseUserManager):
@@ -52,7 +54,6 @@ class User(AbstractBaseUser, PermissionsMixin):  # Added PermissionsMixin
             return True  # No OTP generated yet
         expiration_time = self.otp_generated_at + timezone.timedelta(minutes=5)
         return timezone.now() > expiration_time
-
 
 
 class Address(models.Model):
