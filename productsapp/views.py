@@ -510,3 +510,4 @@ class UserOrdersListView(generics.ListAPIView):
             'total_orders': total_orders,
             'orders': serializer.data
         })
+
