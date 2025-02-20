@@ -129,9 +129,10 @@ class LoginView(APIView):
             # Log in the user
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
-            # Include the username in the response
+            # Include user_id in response
             return Response(
                 {
+                    "user_id": user.id,  # Now including user ID
                     "user": user.username,
                     "message": "Login successful!"
                 },
@@ -139,7 +140,6 @@ class LoginView(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class AddressAPIView(APIView):
     permission_classes = []
