@@ -33,7 +33,7 @@ urlpatterns = [
     path('product/review/',ProductReviewCreateUpdateView.as_view(),name='product-review'),
     path('product/review/delete/<int:review_id>/', ProductReviewDeleteView.as_view(), name='delete-product-review'),
 
-    path('checkout/', CheckoutView.as_view(), name='checkout'),
+    path('checkout', CheckoutView.as_view(), name='checkout'),
     path('orders/user/<int:user_id>/', OrderListView.as_view(), name='order-list-by-user'),
     path('orders/user/<int:user_id>/<str:order_ids>/', OrderDetailView.as_view(), name='order-detail'),
     path('orders/', AllOrdersListView.as_view(), name='all-orders-list'),
