@@ -511,3 +511,15 @@ class UserOrdersListView(generics.ListAPIView):
             'orders': serializer.data
         })
 
+class VendorOrderListView(generics.ListAPIView):
+    serializer_class = CheckoutSerializer
+
+    def get_queryset(self):
+        vendor_id = self.kwargs.get('vendor_id')  # Get vendor_id from URL
+
+        # Get all orders that contain products from this vendor
+        orders = Order.objects.filter(
+            product_ids__in=Products.objects.filter(vendor_id=vendor_id).values_list('id', flat=True)
+        ).distinct()
+
+        return orders
