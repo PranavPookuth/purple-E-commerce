@@ -489,7 +489,7 @@ class UpdateOrderStatusView(APIView):
 
         return Response({
             "message": "Order status updated successfully",
-            "order_id": order.order_ids,
+            "order_id": order.order_ids
             "new_status": order.status
         }, status=status.HTTP_200_OK)
 
