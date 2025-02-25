@@ -136,13 +136,14 @@ class WishlistSerializer(serializers.ModelSerializer):
         return None
 
 class ProductReviewSerializer(serializers.ModelSerializer):
-    user = serializers.CharField(source='user.username', read_only=True)
+
+    user_name = serializers.CharField(source='user.username', read_only=True)  # Ensure user_id is serialized
     product_name = serializers.CharField(source='product.product_name', read_only=True)
 
     class Meta:
         model = ProductReview
-        fields = ['id', 'product', 'product_name', 'user', 'rating', 'review', 'created_at']
-        read_only_fields = ['id', 'created_at', 'user', 'product_name']
+        fields = ['id', 'product', 'product_name', 'user', 'user_name', 'rating', 'review', 'created_at']
+
 
 class CartSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField(read_only=True)  # You must define get_user()

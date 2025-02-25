@@ -208,24 +208,27 @@ class WishlistView(APIView):
 
         return Response({"detail": "Product not in the wishlist."}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class ProductReviewCreateUpdateView(generics.ListCreateAPIView):
-    permission_classes = []  # No authentication required
-    authentication_classes = []
     queryset = ProductReview.objects.all()
     serializer_class = ProductReviewSerializer
+    permission_classes = []
+    authentication_classes = []
 
     def post(self, request, *args, **kwargs):
         """Handles creating a new review"""
         data = request.data.copy()
 
-        if request.user.is_authenticated:
-            data['user'] = request.user.id  # Assign user if authenticated
-        else:
-            data.pop('user', None)  # Ensure 'user' is not sent
+        user_id = data.get('user_id')
+        if not user_id:
+            return Response({'error': 'User ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = get_object_or_404(User, id=user_id)
+        data['user'] = user.id
 
         serializer = ProductReviewSerializer(data=data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        serializer.save(user=user)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
