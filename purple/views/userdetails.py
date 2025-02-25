@@ -193,7 +193,7 @@ class UserUpdateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserDetailView(generics.RetrieveDestroyAPIView):
+class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = []
     authentication_classes = []
     """
